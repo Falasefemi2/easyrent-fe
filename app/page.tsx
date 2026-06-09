@@ -47,20 +47,44 @@ export default function HomePage() {
 		};
 	}, []);
 
-	const fetchListings = useCallback(async (p = 1) => {
-		setLoading(true);
-		try {
-			const result = await runApi((api) =>
-				api.getListings({ page: p, limit: 12 }),
-			);
-			setListings(result.data as Listing[]);
-			setTotalPages(result.totalPages);
-		} catch (e) {
-			console.error(e);
-		} finally {
-			setLoading(false);
+	const getFilterParams = (filter: string) => {
+		switch (filter) {
+			case "Furnished":
+				return { furnished: true };
+			case "1 bed":
+				return { rooms: 1 };
+			case "2 beds":
+				return { rooms: 2 };
+			case "3+ beds":
+				return { minRooms: 3 };
+			case "Self contain":
+				return { rooms: 1, furnished: false };
+			default:
+				return {};
 		}
-	}, []);
+	};
+
+	const fetchListings = useCallback(
+		async (p = 1, filter = activeFilter) => {
+			setLoading(true);
+			try {
+				const result = await runApi((api) =>
+					api.getListings({
+						page: p,
+						limit: 12,
+						...getFilterParams(filter),
+					}),
+				);
+				setListings(result.data as Listing[]);
+				setTotalPages(result.totalPages);
+			} catch (e) {
+				console.error(e);
+			} finally {
+				setLoading(false);
+			}
+		},
+		[activeFilter],
+	);
 
 	useEffect(() => {
 		fetchListings(page);
@@ -121,7 +145,11 @@ export default function HomePage() {
 						{FILTERS.map((filter) => (
 							<button
 								key={filter}
-								onClick={() => setActiveFilter(filter)}
+								onClick={() => {
+									setActiveFilter(filter);
+									setPage(1);
+									fetchListings(1, filter);
+								}}
 								className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap border transition-colors ${
 									activeFilter === filter
 										? "bg-[#E8442A] text-white border-[#E8442A]"

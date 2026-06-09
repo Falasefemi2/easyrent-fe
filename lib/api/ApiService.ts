@@ -95,6 +95,9 @@ export class ApiService extends Context.Service<
 			page?: number;
 			limit?: number;
 			status?: string;
+			furnished?: boolean;
+			minRooms?: number;
+			rooms?: number;
 		}) => Effect.Effect<PaginatedListings, ApiError>;
 
 		readonly getListingById: (
@@ -313,24 +316,29 @@ export class ApiService extends Context.Service<
 					page?: number;
 					limit?: number;
 					status?: string;
-				}): Effect.Effect<PaginatedListings, ApiError> =>
-					baseClient
-						.get("/listings", {
-							urlParams: {
-								page: String(params?.page ?? 1),
-								limit: String(params?.limit ?? 10),
-								...(params?.status
-									? {
-											status: params.status,
-										}
-									: {}),
-							},
-						})
-						.pipe(
-							Effect.flatMap((response) => response.json),
-							Effect.map((json) => json as unknown as PaginatedListings),
-							Effect.mapError(mapError),
-						),
+					furnished?: boolean;
+					rooms?: number;
+					minRooms?: number;
+				}): Effect.Effect<PaginatedListings, ApiError> => {
+					const urlParams: Record<string, string> = {
+						page: String(params?.page ?? 1),
+						limit: String(params?.limit ?? 10),
+					};
+
+					if (params?.status) urlParams.status = params.status;
+					if (params?.furnished !== undefined)
+						urlParams.furnished = String(params.furnished);
+					if (params?.rooms !== undefined)
+						urlParams.rooms = String(params.rooms);
+					if (params?.minRooms !== undefined)
+						urlParams.minRooms = String(params.minRooms);
+
+					return baseClient.get("/listings", { urlParams }).pipe(
+						Effect.flatMap((response) => response.json),
+						Effect.map((json) => json as unknown as PaginatedListings),
+						Effect.mapError(mapError),
+					);
+				},
 			);
 
 			const getListingById = Effect.fn("ApiService.getListingById")(
