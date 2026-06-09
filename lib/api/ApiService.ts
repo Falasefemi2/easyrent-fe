@@ -169,6 +169,17 @@ export class ApiService extends Context.Service<
 		readonly uploadAvatar: (
 			file: File,
 		) => Effect.Effect<{ avatarUrl: string }, ApiError>;
+		readonly getMe: () => Effect.Effect<
+			{
+				id: string;
+				email: string;
+				fullname: string;
+				phone: string;
+				avatarUrl: string | null;
+				createdAt: string;
+			},
+			ApiError
+		>;
 	}
 >()("easyrent/ApiService") {
 	static readonly layer = Layer.effect(
@@ -551,6 +562,26 @@ export class ApiService extends Context.Service<
 						}).pipe(Effect.mapError(mapError)),
 					),
 			);
+			const getMe = Effect.fn("ApiService.getMe")(
+				(): Effect.Effect<
+					{
+						id: string;
+						email: string;
+						fullname: string;
+						phone: string;
+						avatarUrl: string | null;
+						createdAt: string;
+					},
+					ApiError
+				> =>
+					makeAuthRequest((client) =>
+						client.get("/users/me").pipe(
+							Effect.flatMap((response) => response.json),
+							Effect.map((json) => json as any),
+							Effect.mapError(mapError),
+						),
+					),
+			);
 
 			return ApiService.of({
 				signUp,
@@ -568,6 +599,7 @@ export class ApiService extends Context.Service<
 				getMyFavorites,
 				checkFavorite,
 				uploadAvatar,
+				getMe,
 			});
 		}),
 	).pipe(Layer.provide(TokenStore.layer));

@@ -27,15 +27,30 @@ export default function ProfilePage() {
 	const [favoritesPage, setFavoritesPage] = useState(1);
 	const [listingsTotalPages, setListingsTotalPages] = useState(1);
 	const [favoritesTotalPages, setFavoritesTotalPages] = useState(1);
+	const [user, setUser] = useState<{ fullname: string; email: string } | null>(
+		null,
+	);
 
 	useEffect(() => {
 		if (!localStorage.getItem("accessToken")) {
 			router.push("/sign-in");
 			return;
 		}
-		// Load saved avatar
 		const saved = localStorage.getItem("avatarUrl");
 		if (saved) setAvatarUrl(saved);
+
+		// Fetch user profile
+		runApi((api) => api.getMe())
+			.then((u) => {
+				setUser(u as any);
+				localStorage.setItem("userFullname", (u as any).fullname);
+				localStorage.setItem("userEmail", (u as any).email);
+				if (!saved && (u as any).avatarUrl) {
+					setAvatarUrl((u as any).avatarUrl);
+					localStorage.setItem("avatarUrl", (u as any).avatarUrl);
+				}
+			})
+			.catch(() => {});
 	}, [router]);
 
 	useEffect(() => {
@@ -164,24 +179,19 @@ export default function ProfilePage() {
 						</div>
 
 						<div>
-							<h1 className="text-xl font-semibold text-gray-900">
-								My profile
-							</h1>
+							<div>
+								<h1 className="text-xl font-semibold text-gray-900">
+									{user?.fullname ?? "My profile"}
+								</h1>
+								<p className="text-sm text-gray-500 mt-0.5">
+									{user?.email ?? "Manage your listings and saved properties"}
+								</p>
+							</div>
 							<p className="text-sm text-gray-500 mt-0.5">
 								Manage your listings and saved properties
 							</p>
 						</div>
 					</div>
-
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={handleSignOut}
-						className="flex items-center gap-2 text-gray-500"
-					>
-						<LogOut className="w-4 h-4" />
-						Sign out
-					</Button>
 				</div>
 
 				{/* Stats */}

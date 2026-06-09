@@ -33,6 +33,8 @@ export default function Navbar({
 		await runApi((api) => api.signOut());
 		localStorage.removeItem("favoritedIds");
 		localStorage.removeItem("avatarUrl");
+		localStorage.removeItem("userFullname");
+		localStorage.removeItem("userEmail");
 		router.push("/");
 		router.refresh();
 	};

@@ -22,8 +22,8 @@ export class Listing extends Schema.Class<Listing>("Listing")({
 	createdAt: Schema.String,
 	updatedAt: Schema.String,
 	favoriteCount: Schema.Number,
-	latitude: Schema.NullOr(Schema.Number).pipe(Schema.optional), // ← Make optional
-	longitude: Schema.NullOr(Schema.Number).pipe(Schema.optional), // ← Make optional
+	latitude: Schema.NullOr(Schema.Number).pipe(Schema.optional),
+	longitude: Schema.NullOr(Schema.Number).pipe(Schema.optional),
 	coverImage: Schema.NullOr(Schema.String),
 }) {}
 
@@ -42,6 +42,9 @@ export class ListingWithMedia extends Schema.Class<ListingWithMedia>(
 	createdAt: Schema.String,
 	updatedAt: Schema.String,
 	favoriteCount: Schema.Number,
+	latitude: Schema.NullOr(Schema.Number),
+	longitude: Schema.NullOr(Schema.Number),
+	coverImage: Schema.NullOr(Schema.String),
 	media: Schema.Array(ListingMedia),
 }) {}
 

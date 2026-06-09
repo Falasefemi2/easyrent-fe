@@ -46,3 +46,7 @@ export interface FavoriteListing extends Listing {
 	media: ListingMedia[];
 	favoritedAt: string;
 }
+
+export interface ListingWithMedia extends Listing {
+	media: ListingMedia[];
+}
