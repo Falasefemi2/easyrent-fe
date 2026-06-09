@@ -31,8 +31,10 @@ export default function Navbar({
 
 	const handleSignOut = async () => {
 		await runApi((api) => api.signOut());
-		setIsLoggedIn(false);
+		localStorage.removeItem("favoritedIds");
+		localStorage.removeItem("avatarUrl");
 		router.push("/");
+		router.refresh();
 	};
 
 	return (

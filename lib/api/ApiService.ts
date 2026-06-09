@@ -98,6 +98,7 @@ export class ApiService extends Context.Service<
 			furnished?: boolean;
 			minRooms?: number;
 			rooms?: number;
+			search?: string;
 		}) => Effect.Effect<PaginatedListings, ApiError>;
 
 		readonly getListingById: (
@@ -319,6 +320,7 @@ export class ApiService extends Context.Service<
 					furnished?: boolean;
 					rooms?: number;
 					minRooms?: number;
+					search?: string;
 				}): Effect.Effect<PaginatedListings, ApiError> => {
 					const urlParams: Record<string, string> = {
 						page: String(params?.page ?? 1),
@@ -332,6 +334,7 @@ export class ApiService extends Context.Service<
 						urlParams.rooms = String(params.rooms);
 					if (params?.minRooms !== undefined)
 						urlParams.minRooms = String(params.minRooms);
+					if (params?.search) urlParams.search = params.search;
 
 					return baseClient.get("/listings", { urlParams }).pipe(
 						Effect.flatMap((response) => response.json),

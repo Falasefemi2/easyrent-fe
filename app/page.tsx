@@ -33,6 +33,8 @@ export default function HomePage() {
 		const saved = localStorage.getItem("favoritedIds");
 		return saved ? new Set(JSON.parse(saved)) : new Set();
 	});
+	const [searchQuery, setSearchQuery] = useState("");
+	const [debouncedSearch, setDebouncedSearch] = useState("");
 
 	useEffect(() => {
 		const checkAuth = () => {
@@ -64,8 +66,19 @@ export default function HomePage() {
 		}
 	};
 
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearch(searchQuery);
+		}, 500);
+		return () => clearTimeout(timer);
+	}, [searchQuery]);
+
+	useEffect(() => {
+		fetchListings(1, activeFilter, debouncedSearch);
+	}, [debouncedSearch]);
+
 	const fetchListings = useCallback(
-		async (p = 1, filter = activeFilter) => {
+		async (p = 1, filter = activeFilter, search = debouncedSearch) => {
 			setLoading(true);
 			try {
 				const result = await runApi((api) =>
@@ -73,6 +86,7 @@ export default function HomePage() {
 						page: p,
 						limit: 12,
 						...getFilterParams(filter),
+						...(search ? { search } : {}),
 					}),
 				);
 				setListings(result.data as Listing[]);
@@ -83,7 +97,7 @@ export default function HomePage() {
 				setLoading(false);
 			}
 		},
-		[activeFilter],
+		[activeFilter, debouncedSearch],
 	);
 
 	useEffect(() => {
@@ -117,6 +131,11 @@ export default function HomePage() {
 					<div className="flex items-center gap-2 border border-gray-200 rounded-full px-4 py-2 max-w-2xl shadow-sm hover:shadow-md transition-shadow">
 						<Input
 							placeholder="Search by location..."
+							value={searchQuery}
+							onChange={(e) => {
+								setSearchQuery(e.target.value);
+								setPage(1);
+							}}
 							className="border-none shadow-none focus-visible:ring-0 text-sm flex-1 p-0"
 						/>
 						<button className="bg-[#E8442A] text-white rounded-full p-2 hover:bg-[#d03d25] transition-colors">
