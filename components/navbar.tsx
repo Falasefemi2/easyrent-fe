@@ -54,7 +54,7 @@ export default function Navbar({
 								>
 									<span>+</span> List property
 								</Button>
-								<Link href="/profile">
+								<Link href="/profile" className="hidden sm:block">
 									<div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors">
 										<svg
 											className="w-4 h-4 text-gray-600"

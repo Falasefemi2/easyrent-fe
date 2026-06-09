@@ -59,7 +59,7 @@ export default function ListingCard({
 	return (
 		<Link href={`/listings/${listing.id}`}>
 			<div className="group cursor-pointer">
-				<div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 mb-3">
+				<div className="relative aspect-4/3 rounded-xl overflow-hidden bg-gray-100 mb-3">
 					{coverImage ? (
 						<Image
 							src={coverImage}

@@ -299,7 +299,7 @@ export default function CreateListingModal({
 							/>
 						</div>
 
-						<div className="rounded-xl overflow-hidden border border-gray-200 h-[240px]">
+						<div className="rounded-xl overflow-hidden border border-gray-200 h-60">
 							<MapView
 								latitude={step2.latitude}
 								longitude={step2.longitude}

@@ -77,7 +77,7 @@ export default function ListingDetailPage() {
 			<div className="min-h-screen bg-white">
 				<Navbar />
 				<div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-					<Skeleton className="w-full aspect-[16/9] rounded-2xl" />
+					<Skeleton className="w-full aspect-video rounded-2xl" />
 					<Skeleton className="h-8 w-2/3" />
 					<Skeleton className="h-4 w-1/3" />
 					<Skeleton className="h-6 w-1/4" />
@@ -120,7 +120,7 @@ export default function ListingDetailPage() {
 				</button>
 
 				{images.length > 0 ? (
-					<div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-[400px] mb-8">
+					<div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-100 mb-8">
 						{/* Main image */}
 						<div className="col-span-2 row-span-2 relative">
 							<Image
@@ -154,7 +154,7 @@ export default function ListingDetailPage() {
 						))}
 					</div>
 				) : (
-					<div className="w-full h-[300px] rounded-2xl bg-gray-100 flex items-center justify-center mb-8">
+					<div className="w-full h-75 rounded-2xl bg-gray-100 flex items-center justify-center mb-8">
 						<p className="text-gray-400">No photos available</p>
 					</div>
 				)}
@@ -225,7 +225,7 @@ export default function ListingDetailPage() {
 							<h2 className="text-lg font-medium text-gray-900 mb-3">
 								Location
 							</h2>
-							<div className="rounded-xl overflow-hidden border border-gray-200 h-[280px]">
+							<div className="rounded-xl overflow-hidden border border-gray-200 h-70">
 								<MapView
 									latitude={6.5244}
 									longitude={3.3792}

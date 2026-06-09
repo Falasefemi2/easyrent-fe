@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { runApi } from "@/lib/api/runtime";
 import type { Listing, FavoriteListing } from "@/lib/types";
-import { formatPrice } from "@/lib/utils";
 import { Camera, Heart, Home, LogOut } from "lucide-react";
 import Navbar from "@/components/navbar";
 import ListingCard from "@/components/listingcard";
@@ -240,7 +239,7 @@ export default function ProfilePage() {
 									length: 4,
 								}).map((_, i) => (
 									<div key={i} className="space-y-3">
-										<Skeleton className="aspect-[4/3] rounded-xl" />
+										<Skeleton className="aspect-4/3 rounded-xl" />
 										<Skeleton className="h-4 w-3/4" />
 										<Skeleton className="h-3 w-1/2" />
 									</div>
@@ -306,7 +305,7 @@ export default function ProfilePage() {
 									length: 4,
 								}).map((_, i) => (
 									<div key={i} className="space-y-3">
-										<Skeleton className="aspect-[4/3] rounded-xl" />
+										<Skeleton className="aspect-4/3 rounded-xl" />
 										<Skeleton className="h-4 w-3/4" />
 										<Skeleton className="h-3 w-1/2" />
 									</div>
