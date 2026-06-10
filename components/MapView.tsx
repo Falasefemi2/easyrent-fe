@@ -1,10 +1,10 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix leaflet default marker icon
 const icon = L.icon({
 	iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
 	iconRetinaUrl:
@@ -14,6 +14,14 @@ const icon = L.icon({
 	iconAnchor: [12, 41],
 	popupAnchor: [1, -34],
 });
+
+function RecenterMap({ lat, lng }: { lat: number; lng: number }) {
+	const map = useMap();
+	useEffect(() => {
+		map.setView([lat, lng], 15);
+	}, [lat, lng, map]);
+	return null;
+}
 
 interface MapViewProps {
 	latitude: number;
@@ -41,6 +49,7 @@ export default function MapView({
 				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 				url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 			/>
+			<RecenterMap lat={latitude} lng={longitude} />
 			<Marker
 				position={[latitude, longitude]}
 				icon={icon}

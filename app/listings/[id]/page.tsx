@@ -227,8 +227,8 @@ export default function ListingDetailPage() {
 							</h2>
 							<div className="rounded-xl overflow-hidden border border-gray-200 h-70">
 								<MapView
-									latitude={6.5244}
-									longitude={3.3792}
+									latitude={listing.latitude ?? 6.5244}
+									longitude={listing.longitude ?? 3.3792}
 									address={listing.address}
 								/>
 							</div>

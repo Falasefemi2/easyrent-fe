@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import {
 	Dialog,
@@ -33,8 +33,8 @@ interface Step1Data {
 
 interface Step2Data {
 	address: string;
-	latitude: number;
-	longitude: number;
+	latitude: number | null;
+	longitude: number | null;
 }
 
 interface Step3Data {
@@ -62,8 +62,8 @@ export default function CreateListingModal({
 
 	const [step2, setStep2] = useState<Step2Data>({
 		address: "",
-		latitude: DEFAULT_LAGOS.latitude,
-		longitude: DEFAULT_LAGOS.longitude,
+		latitude: null,
+		longitude: null,
 	});
 
 	const [step3, setStep3] = useState<Step3Data>({ files: [] });
@@ -80,8 +80,8 @@ export default function CreateListingModal({
 		});
 		setStep2({
 			address: "",
-			latitude: DEFAULT_LAGOS.latitude,
-			longitude: DEFAULT_LAGOS.longitude,
+			latitude: null,
+			longitude: null,
 		});
 		setStep3({ files: [] });
 		setPreviews([]);
@@ -119,8 +119,8 @@ export default function CreateListingModal({
 					price: step1.price,
 					rooms: step1.rooms,
 					furnished: step1.furnished,
-					latitude: step2.latitude,
-					longitude: step2.longitude,
+					latitude: step2?.latitude ?? 0,
+					longitude: step2?.longitude ?? 0,
 					address: step2.address,
 				}),
 			);
@@ -158,6 +158,27 @@ export default function CreateListingModal({
 
 	const validateStep2 = () => {
 		return step2.address.length > 0;
+	};
+
+	const geocodeAddress = async (address: string) => {
+		if (!address.trim()) return;
+
+		try {
+			const res = await fetch(
+				`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
+			);
+			const data = await res.json();
+			if (data.length > 0) {
+				const { lat, lon } = data[0];
+				setStep2((prev) => ({
+					...prev,
+					latitude: parseFloat(lat),
+					longitude: parseFloat(lon),
+				}));
+			}
+		} catch (e) {
+			console.error("Geocoding failed:", e);
+		}
 	};
 
 	return (
@@ -287,31 +308,59 @@ export default function CreateListingModal({
 					<div className="space-y-4">
 						<div className="space-y-2">
 							<Label>Address</Label>
-							<Input
-								placeholder="e.g. Chevron Drive, Lekki, Lagos"
-								value={step2.address}
-								onChange={(e) =>
-									setStep2({
-										...step2,
-										address: e.target.value,
-									})
-								}
-							/>
+							<div className="flex gap-2">
+								<Input
+									placeholder="e.g. Chevron Drive, Lekki, Lagos"
+									value={step2.address}
+									onChange={(e) =>
+										setStep2({ ...step2, address: e.target.value })
+									}
+									onKeyDown={(e) => {
+										if (e.key === "Enter") {
+											e.preventDefault();
+											geocodeAddress(step2.address);
+										}
+									}}
+								/>
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									onClick={() => geocodeAddress(step2.address)}
+									className="shrink-0"
+								>
+									<svg
+										className="w-4 h-4"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+										/>
+									</svg>
+								</Button>
+							</div>
+							<p className="text-xs text-gray-400">
+								Type address then press Enter or click search to pin location
+							</p>
 						</div>
-
 						<div className="rounded-xl overflow-hidden border border-gray-200 h-60">
 							<MapView
-								latitude={step2.latitude}
-								longitude={step2.longitude}
-								address={step2.address || "Drag to set location"}
+								latitude={step2.latitude ?? DEFAULT_LAGOS.latitude}
+								longitude={step2.longitude ?? DEFAULT_LAGOS.longitude}
+								address={step2.address}
 								draggable
-								onPositionChange={(lat, lng) =>
-									setStep2({
-										...step2,
+								onPositionChange={(lat, lng) => {
+									setStep2((prev) => ({
+										...prev,
 										latitude: lat,
 										longitude: lng,
-									})
-								}
+									}));
+								}}
 							/>
 						</div>
 
@@ -319,7 +368,7 @@ export default function CreateListingModal({
 							<div className="space-y-1">
 								<Label className="text-xs text-gray-500">Latitude (auto)</Label>
 								<Input
-									value={step2.latitude.toFixed(6)}
+									value={(step2.latitude ?? DEFAULT_LAGOS.latitude).toFixed(6)}
 									readOnly
 									className="text-sm text-gray-500 bg-gray-50"
 								/>
@@ -329,7 +378,9 @@ export default function CreateListingModal({
 									Longitude (auto)
 								</Label>
 								<Input
-									value={step2.longitude.toFixed(6)}
+									value={(step2.longitude ?? DEFAULT_LAGOS.longitude).toFixed(
+										6,
+									)}
 									readOnly
 									className="text-sm text-gray-500 bg-gray-50"
 								/>
