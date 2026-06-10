@@ -12,6 +12,7 @@ import { runApi } from "@/lib/api/runtime";
 import type { ListingWithMedia } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import Navbar from "@/components/navbar";
+import { toast } from "sonner";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -30,6 +31,7 @@ export default function ListingDetailPage() {
 				const result = await runApi((api) => api.getListingById(id));
 				setListing(result as unknown as ListingWithMedia);
 			} catch (e) {
+				toast.error("Failed to load listing details");
 				console.error(e);
 			} finally {
 				setLoading(false);
@@ -54,6 +56,7 @@ export default function ListingDetailPage() {
 
 	const handleFavorite = async () => {
 		if (!localStorage.getItem("accessToken")) {
+			toast.error("Please sign in to favorite properties");
 			router.push("/sign-in");
 			return;
 		}
@@ -61,11 +64,14 @@ export default function ListingDetailPage() {
 		try {
 			if (favorited) {
 				await runApi((api) => api.removeFavorite(id));
+				toast.success("Removed from favorites");
 			} else {
 				await runApi((api) => api.addFavorite(id));
+				toast.success("Added to favorites!");
 			}
 			setFavorited(!favorited);
 		} catch (e) {
+			toast.error("Failed to update favorites. Please try again.");
 			console.error(e);
 		} finally {
 			setCheckingFavorite(false);
@@ -122,7 +128,7 @@ export default function ListingDetailPage() {
 				{images.length > 0 ? (
 					<div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-100 mb-8">
 						{/* Main image */}
-						<div className="col-span-2 row-span-2 relative">
+						<div className="col-span-2 row-span-2 relative rounded-l-2xl overflow-hidden">
 							<Image
 								src={images[activeImage]?.url ?? images[0].url}
 								alt={listing.title}
@@ -135,7 +141,10 @@ export default function ListingDetailPage() {
 						{images.slice(1, 5).map((img, i) => (
 							<div
 								key={img.id}
-								className="relative cursor-pointer hover:opacity-90 transition-opacity"
+								className={`relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden
+                ${i === 1 ? "rounded-tr-2xl" : ""}
+                ${i === 3 ? "rounded-br-2xl" : ""}
+            `}
 								onClick={() => setActiveImage(i + 1)}
 							>
 								<Image
@@ -144,6 +153,8 @@ export default function ListingDetailPage() {
 									fill
 									sizes="(max-width: 768px) 25vw, 12vw"
 									className="object-cover"
+									loading={i === 0 ? "eager" : "lazy"}
+									priority={i === 0}
 								/>
 							</div>
 						))}
@@ -186,7 +197,7 @@ export default function ListingDetailPage() {
 							</div>
 						</div>
 
-						<div className="flex flex-wrap gap-3">
+						<div className="flex flex-wrap gap-3 items-center">
 							{listing.rooms && (
 								<div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full text-sm text-gray-600">
 									<Bed className="w-4 h-4" />
@@ -201,11 +212,11 @@ export default function ListingDetailPage() {
 							)}
 							{listing.status && (
 								<Badge
-									className={
+									className={`self-center ${
 										listing.status === "avaiable"
 											? "bg-green-50 text-green-700 border-green-200"
 											: "bg-gray-50 text-gray-600"
-									}
+									}`}
 								>
 									{listing.status === "avaiable" ? "Available" : listing.status}
 								</Badge>

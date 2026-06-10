@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { runApi } from "@/lib/api/runtime";
+import { toast } from "sonner";
 
 export default function SignUpPage() {
 	const router = useRouter();
@@ -18,19 +19,17 @@ export default function SignUpPage() {
 		confirmPassword: "",
 	});
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState("");
 
 	const handleSubmit = async (e: React.SubmitEvent) => {
 		e.preventDefault();
-		setError("");
 
 		if (form.password !== form.confirmPassword) {
-			setError("Passwords do not match");
+			toast.error("Passwords do not match");
 			return;
 		}
 
 		if (form.password.length < 8) {
-			setError("Password must be at least 8 characters");
+			toast.error("Password must be at least 8 characters");
 			return;
 		}
 
@@ -45,10 +44,11 @@ export default function SignUpPage() {
 					password: form.password,
 				}),
 			);
+			toast.success("Account created successfully! Welcome to EasyRent.");
 			router.push("/");
 			router.refresh();
 		} catch (e) {
-			setError("Something went wrong. Email may already be registered.");
+			toast.error("Something went wrong. Email may already be registered.");
 		} finally {
 			setLoading(false);
 		}
@@ -154,12 +154,6 @@ export default function SignUpPage() {
 								required
 							/>
 						</div>
-
-						{error && (
-							<p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">
-								{error}
-							</p>
-						)}
 
 						<Button
 							type="submit"

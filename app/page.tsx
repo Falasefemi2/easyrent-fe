@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/navbar";
 import ListingCard from "@/components/listingcard";
 import CreateListingModal from "@/components/createlistingmodal";
+import { toast } from "sonner";
 
 const FILTERS = [
 	"All",
@@ -92,6 +93,7 @@ export default function HomePage() {
 				setListings(result.data as Listing[]);
 				setTotalPages(result.totalPages);
 			} catch (e) {
+				toast.error("Failed to load listings");
 				console.error(e);
 			} finally {
 				setLoading(false);
@@ -112,7 +114,9 @@ export default function HomePage() {
 				setFavoritedIds(new Set(ids));
 				localStorage.setItem("favoritedIds", JSON.stringify(ids));
 			})
-			.catch(() => {});
+			.catch(() => {
+				toast.error("Failed to load favorites");
+			});
 	}, []);
 
 	return (

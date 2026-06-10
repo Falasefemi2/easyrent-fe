@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { runApi } from "@/lib/api/runtime";
 import { X, Upload, MapPin } from "lucide-react";
+import { toast } from "sonner";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
@@ -50,7 +51,6 @@ export default function CreateListingModal({
 }: CreateListingModalProps) {
 	const [step, setStep] = useState(1);
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState("");
 
 	const [step1, setStep1] = useState<Step1Data>({
 		title: "",
@@ -85,7 +85,6 @@ export default function CreateListingModal({
 		});
 		setStep3({ files: [] });
 		setPreviews([]);
-		setError("");
 	};
 
 	const handleClose = () => {
@@ -108,7 +107,6 @@ export default function CreateListingModal({
 
 	const handleSubmit = async () => {
 		setLoading(true);
-		setError("");
 
 		try {
 			// 1. Create listing
@@ -136,11 +134,12 @@ export default function CreateListingModal({
 				);
 			}
 
+			toast.success("Listing published successfully!");
 			reset();
 			onSuccess();
 			onClose();
 		} catch (e) {
-			setError("Something went wrong. Please try again.");
+			toast.error("Something went wrong while publishing. Please try again.");
 			console.error(e);
 		} finally {
 			setLoading(false);
@@ -443,8 +442,6 @@ export default function CreateListingModal({
 								))}
 							</div>
 						)}
-
-						{error && <p className="text-sm text-red-500">{error}</p>}
 					</div>
 				)}
 

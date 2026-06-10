@@ -10,6 +10,7 @@ import type { Listing, FavoriteListing } from "@/lib/types";
 import { Camera, Heart, Home, LogOut } from "lucide-react";
 import Navbar from "@/components/navbar";
 import ListingCard from "@/components/listingcard";
+import { toast } from "sonner";
 
 type Tab = "listings" | "favorites";
 
@@ -50,7 +51,9 @@ export default function ProfilePage() {
 					localStorage.setItem("avatarUrl", (u as any).avatarUrl);
 				}
 			})
-			.catch(() => {});
+			.catch(() => {
+				toast.error("Failed to load user profile");
+			});
 	}, [router]);
 
 	useEffect(() => {
@@ -66,6 +69,7 @@ export default function ProfilePage() {
 				setMyListings(result.data as Listing[]);
 				setListingsTotalPages(result.totalPages);
 			} catch (e) {
+				toast.error("Failed to load your listings");
 				console.error(e);
 			} finally {
 				setLoadingListings(false);
@@ -86,9 +90,9 @@ export default function ProfilePage() {
 				);
 
 				setFavorites(result.data as unknown as FavoriteListing[]);
-				setFavorites(result.data as unknown as FavoriteListing[]);
 				setFavoritesTotalPages(result.totalPages);
 			} catch (e) {
+				toast.error("Failed to load your favorite properties");
 				console.error(e);
 			} finally {
 				setLoadingFavorites(false);
@@ -107,7 +111,9 @@ export default function ProfilePage() {
 			const url = (result as any).avatarUrl;
 			setAvatarUrl(url);
 			localStorage.setItem("avatarUrl", url); // persist
+			toast.success("Profile picture updated successfully!");
 		} catch (e) {
+			toast.error("Failed to upload profile picture");
 			console.error(e);
 		} finally {
 			setUploadingAvatar(false);
@@ -115,9 +121,14 @@ export default function ProfilePage() {
 	};
 
 	const handleSignOut = async () => {
-		await runApi((api) => api.signOut());
-		router.push("/");
-		router.refresh();
+		try {
+			await runApi((api) => api.signOut());
+			toast.success("Successfully signed out");
+			router.push("/");
+			router.refresh();
+		} catch (e) {
+			toast.error("Failed to sign out. Please try again.");
+		}
 	};
 
 	return (

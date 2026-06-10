@@ -7,24 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { runApi } from "@/lib/api/runtime";
+import { toast } from "sonner";
 
 export default function SignInPage() {
 	const router = useRouter();
 	const [form, setForm] = useState({ email: "", password: "" });
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState("");
 
 	const handleSubmit = async (e: React.SubmitEvent) => {
 		e.preventDefault();
 		setLoading(true);
-		setError("");
 
 		try {
 			await runApi((api) => api.signIn(form));
+			toast.success("Welcome back! You have successfully signed in.");
 			router.push("/");
 			router.refresh();
 		} catch (e) {
-			setError("Invalid email or password");
+			toast.error("Invalid email or password. Please try again.");
 		} finally {
 			setLoading(false);
 		}
@@ -83,12 +83,6 @@ export default function SignInPage() {
 								required
 							/>
 						</div>
-
-						{error && (
-							<p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">
-								{error}
-							</p>
-						)}
 
 						<Button
 							type="submit"

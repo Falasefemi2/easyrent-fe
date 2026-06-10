@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { runApi } from "@/lib/api/runtime";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export default function Navbar({
 	onCreateListing,
@@ -30,13 +31,18 @@ export default function Navbar({
 	}, []);
 
 	const handleSignOut = async () => {
-		await runApi((api) => api.signOut());
-		localStorage.removeItem("favoritedIds");
-		localStorage.removeItem("avatarUrl");
-		localStorage.removeItem("userFullname");
-		localStorage.removeItem("userEmail");
-		router.push("/");
-		router.refresh();
+		try {
+			await runApi((api) => api.signOut());
+			localStorage.removeItem("favoritedIds");
+			localStorage.removeItem("avatarUrl");
+			localStorage.removeItem("userFullname");
+			localStorage.removeItem("userEmail");
+			toast.success("Successfully signed out");
+			router.push("/");
+			router.refresh();
+		} catch (e) {
+			toast.error("Failed to sign out");
+		}
 	};
 
 	return (

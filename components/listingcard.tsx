@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Listing } from "@/lib/types";
 import { runApi } from "@/lib/api/runtime";
 import { formatPrice } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function ListingCard({
 	listing,
@@ -21,7 +22,10 @@ export default function ListingCard({
 	const handleFavorite = async (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-		if (!localStorage.getItem("accessToken")) return;
+		if (!localStorage.getItem("accessToken")) {
+			toast.error("Please sign in to favorite properties");
+			return;
+		}
 		setLoading(true);
 		try {
 			if (favorited) {
@@ -35,6 +39,7 @@ export default function ListingCard({
 						JSON.stringify(ids.filter((id) => id !== listing.id)),
 					);
 				}
+				toast.success("Removed from favorites");
 			} else {
 				await runApi((api) => api.addFavorite(listing.id));
 				// Add to localStorage cache
@@ -44,9 +49,11 @@ export default function ListingCard({
 					"favoritedIds",
 					JSON.stringify([...ids, listing.id]),
 				);
+				toast.success("Added to favorites!");
 			}
 			setFavorited(!favorited);
 		} catch (e) {
+			toast.error("Failed to update favorites. Please try again.");
 			console.error(e);
 		} finally {
 			setLoading(false);
