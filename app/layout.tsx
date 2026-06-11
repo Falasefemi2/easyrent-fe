@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
+import GlobalNav from "@/components/GlobalNav";
 
 const ibmPlexSans = IBM_Plex_Sans({
 	subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
 			)}
 		>
 			<body className="min-h-full flex flex-col">
+				<GlobalNav />
 				{children}
 				<Toaster />
 			</body>

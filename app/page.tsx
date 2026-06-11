@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
 import { runApi } from "@/lib/api/runtime";
 import { type Listing } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import Navbar from "@/components/navbar";
 import ListingCard from "@/components/listingcard";
-import CreateListingModal from "@/components/createlistingmodal";
 import { toast } from "sonner";
 import EmptyState from "@/components/emptystate";
 
@@ -28,8 +25,6 @@ export default function HomePage() {
 	const [page, setPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [activeFilter, setActiveFilter] = useState("All");
-	const [showCreateModal, setShowCreateModal] = useState(false);
-	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [favoritedIds, setFavoritedIds] = useState<Set<string>>(() => {
 		if (typeof window === "undefined") return new Set();
 		const saved = localStorage.getItem("favoritedIds");
@@ -39,15 +34,12 @@ export default function HomePage() {
 	const [debouncedSearch, setDebouncedSearch] = useState("");
 
 	useEffect(() => {
-		const checkAuth = () => {
-			setIsLoggedIn(!!localStorage.getItem("accessToken"));
+		const handleListingCreated = () => {
+			fetchListings(1);
 		};
-		checkAuth();
-		window.addEventListener("auth-change", checkAuth);
-		window.addEventListener("storage", checkAuth);
+		window.addEventListener("listing-created", handleListingCreated);
 		return () => {
-			window.removeEventListener("auth-change", checkAuth);
-			window.removeEventListener("storage", checkAuth);
+			window.removeEventListener("listing-created", handleListingCreated);
 		};
 	}, []);
 
@@ -122,14 +114,6 @@ export default function HomePage() {
 
 	return (
 		<div className="min-h-screen bg-white">
-			<Navbar onCreateListing={() => setShowCreateModal(true)} />
-
-			<CreateListingModal
-				open={showCreateModal}
-				onClose={() => setShowCreateModal(false)}
-				onSuccess={() => fetchListings(1)}
-			/>
-
 			{/* Search bar */}
 			<div className="border-b border-gray-100 py-4">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -239,86 +223,6 @@ export default function HomePage() {
 					</div>
 				)}
 			</main>
-
-			{/* Floating action button — mobile only, logged in only */}
-			{isLoggedIn && (
-				<button
-					onClick={() => setShowCreateModal(true)}
-					className="fixed bottom-20 right-4 z-40 w-14 h-14 bg-[#E8442A] rounded-full flex items-center justify-center shadow-lg hover:bg-[#d03d25] transition-colors sm:hidden"
-				>
-					<svg
-						className="w-6 h-6 text-white"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M12 4v16m8-8H4"
-						/>
-					</svg>
-				</button>
-			)}
-
-			{/* Mobile bottom tab bar */}
-			<div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 flex sm:hidden">
-				<Link href="/" className="flex-1 flex flex-col items-center py-2 gap-1">
-					<svg
-						className="w-5 h-5 text-[#E8442A]"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-						/>
-					</svg>
-					<span className="text-xs text-[#E8442A]">Explore</span>
-				</Link>
-				<Link
-					href="/profile"
-					className="flex-1 flex flex-col items-center py-2 gap-1"
-				>
-					<svg
-						className="w-5 h-5 text-gray-400"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-						/>
-					</svg>
-					<span className="text-xs text-gray-400">Saved</span>
-				</Link>
-				<Link
-					href="/profile"
-					className="flex-1 flex flex-col items-center py-2 gap-1"
-				>
-					<svg
-						className="w-5 h-5 text-gray-400"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-						/>
-					</svg>
-					<span className="text-xs text-gray-400">Profile</span>
-				</Link>
-			</div>
 		</div>
 	);
 }

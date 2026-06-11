@@ -8,11 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { runApi } from "@/lib/api/runtime";
 import type { Listing, FavoriteListing } from "@/lib/types";
 import { Camera, Heart, Home } from "lucide-react";
-import Navbar from "@/components/navbar";
 import ListingCard from "@/components/listingcard";
 import { toast } from "sonner";
 import EmptyState from "@/components/emptystate";
-import CreateListingModal from "@/components/createlistingmodal";
 
 type Tab = "listings" | "favorites";
 
@@ -33,7 +31,36 @@ export default function ProfilePage() {
 	const [user, setUser] = useState<{ fullname: string; email: string } | null>(
 		null,
 	);
-	const [showCreateModal, setShowCreateModal] = useState(false);
+
+	useEffect(() => {
+		const handleListingCreated = () => {
+			setListingsPage(1);
+			fetchMyListings();
+		};
+		window.addEventListener("listing-created", handleListingCreated);
+		return () => {
+			window.removeEventListener("listing-created", handleListingCreated);
+		};
+	}, []);
+
+	const fetchMyListings = async () => {
+		setLoadingListings(true);
+		try {
+			const result = await runApi((api) =>
+				api.getMyListings({
+					page: listingsPage,
+					limit: 8,
+				}),
+			);
+			setMyListings(result.data as Listing[]);
+			setListingsTotalPages(result.totalPages);
+		} catch (e) {
+			toast.error("Failed to load your listings");
+			console.error(e);
+		} finally {
+			setLoadingListings(false);
+		}
+	};
 
 	useEffect(() => {
 		if (!localStorage.getItem("accessToken")) {
@@ -60,24 +87,6 @@ export default function ProfilePage() {
 	}, [router]);
 
 	useEffect(() => {
-		const fetchMyListings = async () => {
-			setLoadingListings(true);
-			try {
-				const result = await runApi((api) =>
-					api.getMyListings({
-						page: listingsPage,
-						limit: 8,
-					}),
-				);
-				setMyListings(result.data as Listing[]);
-				setListingsTotalPages(result.totalPages);
-			} catch (e) {
-				toast.error("Failed to load your listings");
-				console.error(e);
-			} finally {
-				setLoadingListings(false);
-			}
-		};
 		fetchMyListings();
 	}, [listingsPage]);
 
@@ -123,36 +132,8 @@ export default function ProfilePage() {
 		}
 	};
 
-	const handleSignOut = async () => {
-		try {
-			await runApi((api) => api.signOut());
-			toast.success("Successfully signed out");
-			router.push("/");
-			router.refresh();
-		} catch (e) {
-			toast.error("Failed to sign out. Please try again.");
-		}
-	};
-
 	return (
 		<div className="min-h-screen bg-white">
-			<Navbar onCreateListing={() => setShowCreateModal(true)} />
-
-			<CreateListingModal
-				open={showCreateModal}
-				onClose={() => setShowCreateModal(false)}
-				onSuccess={() => {
-					setListingsPage(1);
-					// Refetch listings
-					runApi((api) => api.getMyListings({ page: 1, limit: 8 }))
-						.then((result) => {
-							setMyListings(result.data as Listing[]);
-							setListingsTotalPages(result.totalPages);
-						})
-						.catch(console.error);
-				}}
-			/>
-
 			<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 				{/* Profile header */}
 				<div className="flex items-start justify-between mb-8">
@@ -287,7 +268,11 @@ export default function ProfilePage() {
 						) : myListings?.length === 0 ? (
 							<EmptyState
 								type="listings"
-								onAction={() => setShowCreateModal(true)}
+								onAction={() =>
+									window.dispatchEvent(
+										new CustomEvent("open-create-listing-modal"),
+									)
+								}
 								actionLabel="List a property"
 							/>
 						) : (

@@ -11,11 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { runApi } from "@/lib/api/runtime";
 import type { ListingWithMedia } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
-import Navbar from "@/components/navbar";
 import { toast } from "sonner";
 import ContactLandlordModal from "@/components/contactlandlordmodal";
-import CreateListingModal from "@/components/createlistingmodal";
-import { Listing } from "@/lib/api/client";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -29,10 +26,6 @@ export default function ListingDetailPage() {
 	const [checkingFavorite, setCheckingFavorite] = useState(false);
 	const [showContact, setShowContact] = useState(false);
 	const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
-	const [showCreateModal, setShowCreateModal] = useState(false);
-	const [myListings, setMyListings] = useState<Listing[]>([]);
-	const [listingsTotalPages, setListingsTotalPages] = useState(1);
-	const [listingsPage, setListingsPage] = useState(1);
 
 	useEffect(() => {
 		const fetchListing = async () => {
@@ -90,7 +83,6 @@ export default function ListingDetailPage() {
 	if (loading) {
 		return (
 			<div className="min-h-screen bg-white">
-				<Navbar />
 				<div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
 					<Skeleton className="w-full aspect-video rounded-2xl" />
 					<Skeleton className="h-8 w-2/3" />
@@ -104,7 +96,6 @@ export default function ListingDetailPage() {
 	if (!listing) {
 		return (
 			<div className="min-h-screen bg-white">
-				<Navbar />
 				<div className="max-w-5xl mx-auto px-4 py-20 text-center text-gray-400">
 					<p>Listing not found</p>
 					<Button
@@ -123,23 +114,6 @@ export default function ListingDetailPage() {
 
 	return (
 		<div className="min-h-screen bg-white">
-			<Navbar onCreateListing={() => setShowCreateModal(true)} />
-
-			<CreateListingModal
-				open={showCreateModal}
-				onClose={() => setShowCreateModal(false)}
-				onSuccess={() => {
-					setListingsPage(1);
-					// Refetch listings
-					runApi((api) => api.getMyListings({ page: 1, limit: 8 }))
-						.then((result) => {
-							setMyListings(result.data as Listing[]);
-							setListingsTotalPages(result.totalPages);
-						})
-						.catch(console.error);
-				}}
-			/>
-
 			<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 				<button
 					onClick={() => router.back()}
