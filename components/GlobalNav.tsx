@@ -56,7 +56,7 @@ export default function GlobalNav() {
 					{isLoggedIn && (
 						<button
 							onClick={() => setShowCreateModal(true)}
-							className="fixed bottom-20 right-4 z-40 w-14 h-14 bg-[#E8442A] rounded-full flex items-center justify-center shadow-lg hover:bg-[#d03d25] transition-colors sm:hidden"
+							className="fixed bottom-20 right-4 z-50 w-14 h-14 bg-[#E8442A] rounded-full flex items-center justify-center shadow-lg hover:bg-[#d03d25] transition-colors sm:hidden"
 						>
 							<svg
 								className="w-6 h-6 text-white"
@@ -75,7 +75,7 @@ export default function GlobalNav() {
 					)}
 
 					{/* Mobile bottom tab bar */}
-					<div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 flex sm:hidden">
+					<div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 flex sm:hidden">
 						<Link
 							href="/"
 							className="flex-1 flex flex-col items-center py-2 gap-1"

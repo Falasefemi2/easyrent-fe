@@ -124,53 +124,78 @@ export default function ListingDetailPage() {
 				</button>
 
 				{images.length > 0 ? (
-					<div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-100 mb-8">
-						<div className="col-span-2 row-span-2 relative bg-gray-100">
-							{!imagesLoaded[activeImage] && (
-								<div className="absolute inset-0 bg-gray-100 animate-pulse" />
-							)}
-							<Image
-								src={images[activeImage]?.url ?? images[0].url}
-								alt={listing.title}
-								fill
-								priority
-								sizes="(max-width: 768px) 100vw, 50vw"
-								className={`object-cover transition-opacity duration-300 ${
-									imagesLoaded[activeImage] ? "opacity-100" : "opacity-0"
-								}`}
-								onLoad={() =>
-									setImagesLoaded((prev) => ({ ...prev, [activeImage]: true }))
-								}
-							/>
+					<div className="relative mb-8">
+						{/* Mobile: Horizontal Scroll Gallery */}
+						<div className="flex sm:hidden overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 gap-2">
+							{images.map((img, i) => (
+								<div
+									key={img.id}
+									className="relative flex-none w-[85vw] aspect-square rounded-2xl overflow-hidden snap-center bg-gray-100"
+								>
+									<Image
+										src={img.url}
+										alt={`${listing.title} - Photo ${i + 1}`}
+										fill
+										priority={i === 0}
+										sizes="85vw"
+										className="object-cover"
+									/>
+									<div className="absolute bottom-3 right-3 bg-black/60 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm">
+										{i + 1} / {images.length}
+									</div>
+								</div>
+							))}
 						</div>
-						{images.slice(1, 5).map((img, i) => (
-							<div
-								key={img.id}
-								className="relative cursor-pointer hover:opacity-90 transition-opacity bg-gray-100"
-								onClick={() => setActiveImage(i + 1)}
-							>
-								{!imagesLoaded[i + 1] && (
+
+						{/* Desktop: Grid Gallery */}
+						<div className="hidden sm:grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-[500px]">
+							<div className="col-span-2 row-span-2 relative bg-gray-100">
+								{!imagesLoaded[activeImage] && (
 									<div className="absolute inset-0 bg-gray-100 animate-pulse" />
 								)}
 								<Image
-									src={img.url}
-									alt={`Photo ${i + 2}`}
+									src={images[activeImage]?.url ?? images[0].url}
+									alt={listing.title}
 									fill
-									sizes="(max-width: 768px) 25vw, 12vw"
+									priority
+									sizes="(max-width: 768px) 100vw, 50vw"
 									className={`object-cover transition-opacity duration-300 ${
-										imagesLoaded[i + 1] ? "opacity-100" : "opacity-0"
+										imagesLoaded[activeImage] ? "opacity-100" : "opacity-0"
 									}`}
 									onLoad={() =>
-										setImagesLoaded((prev) => ({ ...prev, [i + 1]: true }))
+										setImagesLoaded((prev) => ({ ...prev, [activeImage]: true }))
 									}
 								/>
 							</div>
-						))}
-						{Array.from({
-							length: Math.max(0, 4 - images.slice(1, 5).length),
-						}).map((_, i) => (
-							<div key={`empty-${i}`} className="bg-gray-100" />
-						))}
+							{images.slice(1, 5).map((img, i) => (
+								<div
+									key={img.id}
+									className="relative cursor-pointer hover:opacity-90 transition-opacity bg-gray-100"
+									onClick={() => setActiveImage(i + 1)}
+								>
+									{!imagesLoaded[i + 1] && (
+										<div className="absolute inset-0 bg-gray-100 animate-pulse" />
+									)}
+									<Image
+										src={img.url}
+										alt={`Photo ${i + 2}`}
+										fill
+										sizes="(max-width: 768px) 25vw, 12vw"
+										className={`object-cover transition-opacity duration-300 ${
+											imagesLoaded[i + 1] ? "opacity-100" : "opacity-0"
+										}`}
+										onLoad={() =>
+											setImagesLoaded((prev) => ({ ...prev, [i + 1]: true }))
+										}
+									/>
+								</div>
+							))}
+							{Array.from({
+								length: Math.max(0, 4 - images.slice(1, 5).length),
+							}).map((_, i) => (
+								<div key={`empty-${i}`} className="bg-gray-100" />
+							))}
+						</div>
 					</div>
 				) : (
 					<div className="w-full h-75 rounded-2xl bg-gray-100 flex items-center justify-center mb-8">
@@ -244,7 +269,7 @@ export default function ListingDetailPage() {
 							<h2 className="text-lg font-medium text-gray-900 mb-3">
 								Location
 							</h2>
-							<div className="rounded-xl overflow-hidden border border-gray-200 h-70">
+							<div className="relative z-0 rounded-xl overflow-hidden border border-gray-200 h-70">
 								<MapView
 									latitude={listing.latitude ?? 6.5244}
 									longitude={listing.longitude ?? 3.3792}

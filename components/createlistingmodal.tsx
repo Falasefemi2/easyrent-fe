@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { runApi } from "@/lib/api/runtime";
-import { X, Upload, MapPin } from "lucide-react";
+import { X, Upload, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
@@ -84,6 +84,7 @@ export default function CreateListingModal({
 			longitude: null,
 		});
 		setStep3({ files: [] });
+		previews.forEach((url) => URL.revokeObjectURL(url));
 		setPreviews([]);
 	};
 
@@ -93,12 +94,33 @@ export default function CreateListingModal({
 	};
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const files = Array.from(e.target.files ?? []);
+		const newFiles = Array.from(e.target.files ?? []);
+		setStep3((prev) => ({ files: [...prev.files, ...newFiles] }));
+		setPreviews((prev) => [
+			...prev,
+			...newFiles.map((f) => URL.createObjectURL(f)),
+		]);
+	};
+
+	const moveFile = (index: number, direction: "up" | "down") => {
+		const newIndex = direction === "up" ? index - 1 : index + 1;
+		if (newIndex < 0 || newIndex >= step3.files.length) return;
+
+		const files = [...step3.files];
+		const previewsCopy = [...previews];
+
+		[files[index], files[newIndex]] = [files[newIndex], files[index]];
+		[previewsCopy[index], previewsCopy[newIndex]] = [
+			previewsCopy[newIndex],
+			previewsCopy[index],
+		];
+
 		setStep3({ files });
-		setPreviews(files.map((f) => URL.createObjectURL(f)));
+		setPreviews(previewsCopy);
 	};
 
 	const handleRemoveFile = (index: number) => {
+		URL.revokeObjectURL(previews[index]);
 		const newFiles = step3.files.filter((_, i) => i !== index);
 		const newPreviews = previews.filter((_, i) => i !== index);
 		setStep3({ files: newFiles });
@@ -403,7 +425,7 @@ export default function CreateListingModal({
 									Click to upload photos
 								</p>
 								<p className="text-xs text-gray-400 mt-1">
-									PNG, JPG up to 10MB each
+									PNG, JPG up to 10MB each. Select multiple photos to upload.
 								</p>
 								<input
 									type="file"
@@ -416,28 +438,58 @@ export default function CreateListingModal({
 						</label>
 
 						{previews.length > 0 && (
-							<div className="grid grid-cols-3 gap-2">
+							<div className="grid grid-cols-2 gap-3">
 								{previews.map((preview, index) => (
 									<div
 										key={index}
-										className="relative aspect-square rounded-lg overflow-hidden"
+										className="group relative aspect-video rounded-xl overflow-hidden border border-gray-100 bg-gray-50"
 									>
 										<img
 											src={preview}
 											alt={`Preview ${index + 1}`}
 											className="w-full h-full object-cover"
 										/>
+										
+										{/* Badge for cover photo */}
 										{index === 0 && (
-											<div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+											<div className="absolute top-2 left-2 bg-[#E8442A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
 												Cover
 											</div>
 										)}
-										<button
-											onClick={() => handleRemoveFile(index)}
-											className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center"
-										>
-											<X className="w-3 h-3 text-white" />
-										</button>
+
+										{/* Controls overlay */}
+										<div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+											{index > 0 && (
+												<button
+													onClick={() => moveFile(index, "up")}
+													className="p-1.5 bg-white rounded-full hover:bg-gray-100 transition-colors"
+													title="Move earlier"
+												>
+													<ChevronLeft className="w-4 h-4 text-gray-900" />
+												</button>
+											)}
+											{index < previews.length - 1 && (
+												<button
+													onClick={() => moveFile(index, "down")}
+													className="p-1.5 bg-white rounded-full hover:bg-gray-100 transition-colors"
+													title="Move later"
+												>
+													<ChevronRight className="w-4 h-4 text-gray-900" />
+												</button>
+											)}
+											<button
+												onClick={() => handleRemoveFile(index)}
+												className="p-1.5 bg-white rounded-full hover:bg-red-50 transition-colors group/delete"
+												title="Remove photo"
+											>
+												<X className="w-4 h-4 text-gray-900 group-hover/delete:text-red-500" />
+											</button>
+										</div>
+
+										{/* Order badge */}
+										<div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">
+											{index + 1}
+										</div>
 									</div>
 								))}
 							</div>
