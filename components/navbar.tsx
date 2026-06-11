@@ -40,6 +40,7 @@ export default function Navbar({
 			toast.success("Successfully signed out");
 			router.push("/");
 			router.refresh();
+			window.location.href="/"
 		} catch (e) {
 			toast.error("Failed to sign out");
 		}

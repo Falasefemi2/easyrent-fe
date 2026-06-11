@@ -27,6 +27,8 @@ export interface Listing {
 
 export interface ListingWithMedia extends Listing {
 	media: ListingMedia[];
+	landlordPhone?: string | null;
+	landlordName?: string | null;
 }
 
 export interface PaginatedResponse<T> {

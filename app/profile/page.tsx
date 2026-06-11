@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { runApi } from "@/lib/api/runtime";
 import type { Listing, FavoriteListing } from "@/lib/types";
-import { Camera, Heart, Home, LogOut } from "lucide-react";
+import { Camera, Heart, Home } from "lucide-react";
 import Navbar from "@/components/navbar";
 import ListingCard from "@/components/listingcard";
 import { toast } from "sonner";
+import EmptyState from "@/components/emptystate";
+import CreateListingModal from "@/components/createlistingmodal";
 
 type Tab = "listings" | "favorites";
 
@@ -31,6 +33,7 @@ export default function ProfilePage() {
 	const [user, setUser] = useState<{ fullname: string; email: string } | null>(
 		null,
 	);
+	const [showCreateModal, setShowCreateModal] = useState(false);
 
 	useEffect(() => {
 		if (!localStorage.getItem("accessToken")) {
@@ -133,7 +136,22 @@ export default function ProfilePage() {
 
 	return (
 		<div className="min-h-screen bg-white">
-			<Navbar />
+			<Navbar onCreateListing={() => setShowCreateModal(true)} />
+
+			<CreateListingModal
+				open={showCreateModal}
+				onClose={() => setShowCreateModal(false)}
+				onSuccess={() => {
+					setListingsPage(1);
+					// Refetch listings
+					runApi((api) => api.getMyListings({ page: 1, limit: 8 }))
+						.then((result) => {
+							setMyListings(result.data as Listing[]);
+							setListingsTotalPages(result.totalPages);
+						})
+						.catch(console.error);
+				}}
+			/>
 
 			<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 				{/* Profile header */}
@@ -267,17 +285,11 @@ export default function ProfilePage() {
 								))}
 							</div>
 						) : myListings?.length === 0 ? (
-							<div className="text-center py-16 text-gray-400">
-								<Home className="w-10 h-10 mx-auto mb-3 opacity-40" />
-								<p className="text-sm">You haven't listed any properties yet</p>
-								<Button
-									onClick={() => router.push("/")}
-									className="mt-4 bg-[#E8442A] hover:bg-[#d03d25] text-white"
-									size="sm"
-								>
-									List a property
-								</Button>
-							</div>
+							<EmptyState
+								type="listings"
+								onAction={() => setShowCreateModal(true)}
+								actionLabel="List a property"
+							/>
 						) : (
 							<>
 								<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -333,18 +345,11 @@ export default function ProfilePage() {
 								))}
 							</div>
 						) : favorites?.length === 0 ? (
-							<div className="text-center py-16 text-gray-400">
-								<Heart className="w-10 h-10 mx-auto mb-3 opacity-40" />
-								<p className="text-sm">No saved properties yet</p>
-								<Button
-									onClick={() => router.push("/")}
-									variant="outline"
-									size="sm"
-									className="mt-4"
-								>
-									Browse listings
-								</Button>
-							</div>
+							<EmptyState
+								type="favorites"
+								onAction={() => router.push("/")}
+								actionLabel="Browse listings"
+							/>
 						) : (
 							<>
 								<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

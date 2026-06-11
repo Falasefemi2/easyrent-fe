@@ -13,6 +13,9 @@ import type { ListingWithMedia } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import Navbar from "@/components/navbar";
 import { toast } from "sonner";
+import ContactLandlordModal from "@/components/contactlandlordmodal";
+import CreateListingModal from "@/components/createlistingmodal";
+import { Listing } from "@/lib/api/client";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -24,6 +27,12 @@ export default function ListingDetailPage() {
 	const [favorited, setFavorited] = useState(false);
 	const [activeImage, setActiveImage] = useState(0);
 	const [checkingFavorite, setCheckingFavorite] = useState(false);
+	const [showContact, setShowContact] = useState(false);
+	const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
+	const [showCreateModal, setShowCreateModal] = useState(false);
+	const [myListings, setMyListings] = useState<Listing[]>([]);
+	const [listingsTotalPages, setListingsTotalPages] = useState(1);
+	const [listingsPage, setListingsPage] = useState(1);
 
 	useEffect(() => {
 		const fetchListing = async () => {
@@ -114,7 +123,22 @@ export default function ListingDetailPage() {
 
 	return (
 		<div className="min-h-screen bg-white">
-			<Navbar />
+			<Navbar onCreateListing={() => setShowCreateModal(true)} />
+
+			<CreateListingModal
+				open={showCreateModal}
+				onClose={() => setShowCreateModal(false)}
+				onSuccess={() => {
+					setListingsPage(1);
+					// Refetch listings
+					runApi((api) => api.getMyListings({ page: 1, limit: 8 }))
+						.then((result) => {
+							setMyListings(result.data as Listing[]);
+							setListingsTotalPages(result.totalPages);
+						})
+						.catch(console.error);
+				}}
+			/>
 
 			<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 				<button
@@ -127,34 +151,44 @@ export default function ListingDetailPage() {
 
 				{images.length > 0 ? (
 					<div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-100 mb-8">
-						{/* Main image */}
-						<div className="col-span-2 row-span-2 relative rounded-l-2xl overflow-hidden">
+						<div className="col-span-2 row-span-2 relative bg-gray-100">
+							{!imagesLoaded[activeImage] && (
+								<div className="absolute inset-0 bg-gray-100 animate-pulse" />
+							)}
 							<Image
 								src={images[activeImage]?.url ?? images[0].url}
 								alt={listing.title}
 								fill
 								priority
 								sizes="(max-width: 768px) 100vw, 50vw"
-								className="object-cover"
+								className={`object-cover transition-opacity duration-300 ${
+									imagesLoaded[activeImage] ? "opacity-100" : "opacity-0"
+								}`}
+								onLoad={() =>
+									setImagesLoaded((prev) => ({ ...prev, [activeImage]: true }))
+								}
 							/>
 						</div>
 						{images.slice(1, 5).map((img, i) => (
 							<div
 								key={img.id}
-								className={`relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden
-                ${i === 1 ? "rounded-tr-2xl" : ""}
-                ${i === 3 ? "rounded-br-2xl" : ""}
-            `}
+								className="relative cursor-pointer hover:opacity-90 transition-opacity bg-gray-100"
 								onClick={() => setActiveImage(i + 1)}
 							>
+								{!imagesLoaded[i + 1] && (
+									<div className="absolute inset-0 bg-gray-100 animate-pulse" />
+								)}
 								<Image
 									src={img.url}
 									alt={`Photo ${i + 2}`}
 									fill
 									sizes="(max-width: 768px) 25vw, 12vw"
-									className="object-cover"
-									loading={i === 0 ? "eager" : "lazy"}
-									priority={i === 0}
+									className={`object-cover transition-opacity duration-300 ${
+										imagesLoaded[i + 1] ? "opacity-100" : "opacity-0"
+									}`}
+									onLoad={() =>
+										setImagesLoaded((prev) => ({ ...prev, [i + 1]: true }))
+									}
 								/>
 							</div>
 						))}
@@ -279,7 +313,18 @@ export default function ListingDetailPage() {
 									{favorited ? "Saved" : "Save listing"}
 								</Button>
 
-								<Button className="w-full bg-[#E8442A] hover:bg-[#d03d25] text-white">
+								<ContactLandlordModal
+									open={showContact}
+									onClose={() => setShowContact(false)}
+									phone={listing.landlordPhone}
+									name={listing.landlordName}
+									listingTitle={listing.title}
+								/>
+
+								<Button
+									className="w-full bg-[#E8442A] hover:bg-[#d03d25] text-white"
+									onClick={() => setShowContact(true)}
+								>
 									Contact landlord
 								</Button>
 							</div>
