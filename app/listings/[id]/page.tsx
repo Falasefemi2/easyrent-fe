@@ -148,7 +148,7 @@ export default function ListingDetailPage() {
 						</div>
 
 						{/* Desktop: Grid Gallery */}
-						<div className="hidden sm:grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-[500px]">
+						<div className="hidden sm:grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-125">
 							<div className="col-span-2 row-span-2 relative bg-gray-100">
 								{!imagesLoaded[activeImage] && (
 									<div className="absolute inset-0 bg-gray-100 animate-pulse" />
