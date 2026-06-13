@@ -137,6 +137,8 @@ export default function ListingDetailPage() {
 										alt={`${listing.title} - Photo ${i + 1}`}
 										fill
 										priority={i === 0}
+										quality={100}
+										unoptimized
 										sizes="85vw"
 										className="object-cover"
 									/>
@@ -147,9 +149,18 @@ export default function ListingDetailPage() {
 							))}
 						</div>
 
-						{/* Desktop: Grid Gallery */}
-						<div className="hidden sm:grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-125">
-							<div className="col-span-2 row-span-2 relative bg-gray-100">
+						{/* Desktop: Gallery Layout */}
+						<div
+							className={`hidden sm:grid gap-2 rounded-2xl overflow-hidden ${
+								images.length === 1 ? "grid-cols-1" : "grid-cols-4 grid-rows-2"
+							}`}
+							style={{ height: "500px" }}
+						>
+							<div
+								className={`relative bg-gray-100 ${
+									images.length === 1 ? "col-span-4 row-span-2" : "col-span-2 row-span-2"
+								}`}
+							>
 								{!imagesLoaded[activeImage] && (
 									<div className="absolute inset-0 bg-gray-100 animate-pulse" />
 								)}
@@ -158,7 +169,9 @@ export default function ListingDetailPage() {
 									alt={listing.title}
 									fill
 									priority
-									sizes="(max-width: 768px) 100vw, 50vw"
+									quality={100}
+									unoptimized
+									sizes={images.length === 1 ? "100vw" : "(max-width: 768px) 100vw, 50vw"}
 									className={`object-cover transition-opacity duration-300 ${
 										imagesLoaded[activeImage] ? "opacity-100" : "opacity-0"
 									}`}
@@ -167,34 +180,42 @@ export default function ListingDetailPage() {
 									}
 								/>
 							</div>
-							{images.slice(1, 5).map((img, i) => (
-								<div
-									key={img.id}
-									className="relative cursor-pointer hover:opacity-90 transition-opacity bg-gray-100"
-									onClick={() => setActiveImage(i + 1)}
-								>
-									{!imagesLoaded[i + 1] && (
-										<div className="absolute inset-0 bg-gray-100 animate-pulse" />
-									)}
-									<Image
-										src={img.url}
-										alt={`Photo ${i + 2}`}
-										fill
-										sizes="(max-width: 768px) 25vw, 12vw"
-										className={`object-cover transition-opacity duration-300 ${
-											imagesLoaded[i + 1] ? "opacity-100" : "opacity-0"
-										}`}
-										onLoad={() =>
-											setImagesLoaded((prev) => ({ ...prev, [i + 1]: true }))
-										}
-									/>
-								</div>
-							))}
-							{Array.from({
-								length: Math.max(0, 4 - images.slice(1, 5).length),
-							}).map((_, i) => (
-								<div key={`empty-${i}`} className="bg-gray-100" />
-							))}
+
+							{images.length > 1 && (
+								<>
+									{images.slice(1, 5).map((img, i) => (
+										<div
+											key={img.id}
+											className="relative cursor-pointer hover:opacity-90 transition-opacity bg-gray-100"
+											onClick={() => setActiveImage(i + 1)}
+										>
+											{!imagesLoaded[i + 1] && (
+												<div className="absolute inset-0 bg-gray-100 animate-pulse" />
+											)}
+											<Image
+												src={img.url}
+												alt={`Photo ${i + 2}`}
+												fill
+												quality={90}
+												unoptimized
+												sizes="(max-width: 768px) 25vw, 12vw"
+												className={`object-cover transition-opacity duration-300 ${
+													imagesLoaded[i + 1] ? "opacity-100" : "opacity-0"
+												}`}
+												onLoad={() =>
+													setImagesLoaded((prev) => ({ ...prev, [i + 1]: true }))
+												}
+											/>
+										</div>
+									))}
+									{/* Fill remaining slots only if there are at least 2 images but less than 5 total */}
+									{Array.from({
+										length: Math.max(0, 4 - images.slice(1, 5).length),
+									}).map((_, i) => (
+										<div key={`empty-${i}`} className="bg-gray-100" />
+									))}
+								</>
+							)}
 						</div>
 					</div>
 				) : (

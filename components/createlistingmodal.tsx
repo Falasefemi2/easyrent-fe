@@ -296,27 +296,48 @@ export default function CreateListingModal({
 							</div>
 						</div>
 
-						<div className="flex items-center justify-between py-3 border-t border-gray-100">
+						<div
+							className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
+								step1.furnished
+									? "bg-[#E8442A] border-[#E8442A] shadow-md shadow-[#E8442A]/20"
+									: "bg-gray-50 border-gray-100"
+							}`}
+						>
 							<div>
-								<p className="text-sm font-medium text-gray-900">Furnished</p>
-								<p className="text-xs text-gray-500">
+								<p
+									className={`text-sm font-bold transition-colors ${
+										step1.furnished ? "text-white" : "text-gray-900"
+									}`}
+								>
+									Furnished
+								</p>
+								<p
+									className={`text-xs transition-colors ${
+										step1.furnished ? "text-white/80" : "text-gray-500"
+									}`}
+								>
 									Is the property furnished?
 								</p>
 							</div>
 							<button
+								type="button"
 								onClick={() =>
 									setStep1({
 										...step1,
 										furnished: !step1.furnished,
 									})
 								}
-								className={`relative w-11 h-6 rounded-full transition-colors ${
-									step1.furnished ? "bg-[#E8442A]" : "bg-gray-200"
+								className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+									step1.furnished
+										? "bg-white border-white focus-visible:ring-white"
+										: "bg-gray-200 border-transparent focus-visible:ring-[#E8442A]"
 								}`}
 							>
 								<span
-									className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-										step1.furnished ? "translate-x-5" : "translate-x-0.5"
+									className={`pointer-events-none block h-5 w-5 rounded-full shadow-md transition-transform duration-300 ${
+										step1.furnished
+											? "translate-x-5 bg-[#E8442A]"
+											: "translate-x-0 bg-white"
 									}`}
 								/>
 							</button>

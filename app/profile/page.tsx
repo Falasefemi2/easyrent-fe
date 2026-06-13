@@ -147,6 +147,8 @@ export default function ProfilePage() {
 										alt="Avatar"
 										fill
 										sizes="80px"
+										quality={100}
+										unoptimized
 										className="object-cover"
 									/>
 								) : (
