@@ -219,12 +219,10 @@ export class ApiService extends Context.Service<
 				Effect.gen(function* () {
 					const refreshToken = yield* tokenStore.getRefreshToken;
 					if (!refreshToken) {
-						return yield* Effect.fail(
-							new ApiError({
-								message: "No refresh token",
-								status: 401,
-							}),
-						);
+						return yield* new ApiError({
+							message: "No refresh token",
+							status: 401,
+						});
 					}
 
 					const tokens = yield* HttpClientRequest.post("/auth/refresh").pipe(

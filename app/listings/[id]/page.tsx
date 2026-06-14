@@ -1,10 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { Heart, MapPin, Bed, Sofa, ArrowLeft, Share2 } from "lucide-react";
+import {
+	Heart,
+	MapPin,
+	Bed,
+	Sofa,
+	ArrowLeft,
+	Share2,
+	Pencil,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,6 +21,7 @@ import type { ListingWithMedia } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import { toast } from "sonner";
 import ContactLandlordModal from "@/components/contactlandlordmodal";
+import EditListingModal from "@/components/editlistingmodal";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -25,23 +34,46 @@ export default function ListingDetailPage() {
 	const [activeImage, setActiveImage] = useState(0);
 	const [checkingFavorite, setCheckingFavorite] = useState(false);
 	const [showContact, setShowContact] = useState(false);
+	const [showEditModal, setShowEditModal] = useState(false);
 	const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
+	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+	const [isLandlord, setIsLandlord] = useState(false);
+
+	const fetchListing = useCallback(async () => {
+		try {
+			const result = await runApi((api) => api.getListingById(id));
+			setListing(result as unknown as ListingWithMedia);
+		} catch (e) {
+			toast.error("Failed to load listing details");
+			console.error(e);
+		} finally {
+			setLoading(false);
+		}
+	}, [id]);
 
 	useEffect(() => {
-		const fetchListing = async () => {
-			try {
-				const result = await runApi((api) => api.getListingById(id));
-				setListing(result as unknown as ListingWithMedia);
-			} catch (e) {
-				toast.error("Failed to load listing details");
-				console.error(e);
-			} finally {
-				setLoading(false);
-			}
-		};
-
 		fetchListing();
-	}, [id]);
+	}, [fetchListing]);
+
+	// Fetch current user to check if they're the landlord
+	useEffect(() => {
+		const token = localStorage.getItem("accessToken");
+		if (!token) return;
+
+		runApi((api) => api.getMe())
+			.then((u) => {
+				const user = u as unknown as { id: string };
+				setCurrentUserId(user.id);
+			})
+			.catch(() => {});
+	}, []);
+
+	// Check if current user is the landlord
+	useEffect(() => {
+		if (currentUserId && listing?.landlordId) {
+			setIsLandlord(currentUserId === listing.landlordId);
+		}
+	}, [currentUserId, listing]);
 
 	useEffect(() => {
 		const checkFavorite = async () => {
@@ -158,7 +190,9 @@ export default function ListingDetailPage() {
 						>
 							<div
 								className={`relative bg-gray-100 ${
-									images.length === 1 ? "col-span-4 row-span-2" : "col-span-2 row-span-2"
+									images.length === 1
+										? "col-span-4 row-span-2"
+										: "col-span-2 row-span-2"
 								}`}
 							>
 								{!imagesLoaded[activeImage] && (
@@ -171,12 +205,19 @@ export default function ListingDetailPage() {
 									priority
 									quality={100}
 									unoptimized
-									sizes={images.length === 1 ? "100vw" : "(max-width: 768px) 100vw, 50vw"}
+									sizes={
+										images.length === 1
+											? "100vw"
+											: "(max-width: 768px) 100vw, 50vw"
+									}
 									className={`object-cover transition-opacity duration-300 ${
 										imagesLoaded[activeImage] ? "opacity-100" : "opacity-0"
 									}`}
 									onLoad={() =>
-										setImagesLoaded((prev) => ({ ...prev, [activeImage]: true }))
+										setImagesLoaded((prev) => ({
+											...prev,
+											[activeImage]: true,
+										}))
 									}
 								/>
 							</div>
@@ -203,7 +244,10 @@ export default function ListingDetailPage() {
 													imagesLoaded[i + 1] ? "opacity-100" : "opacity-0"
 												}`}
 												onLoad={() =>
-													setImagesLoaded((prev) => ({ ...prev, [i + 1]: true }))
+													setImagesLoaded((prev) => ({
+														...prev,
+														[i + 1]: true,
+													}))
 												}
 											/>
 										</div>
@@ -319,38 +363,62 @@ export default function ListingDetailPage() {
 							</div>
 
 							<div className="space-y-3 pt-2">
-								<Button
-									onClick={handleFavorite}
-									disabled={checkingFavorite}
-									variant="outline"
-									className={`w-full flex items-center gap-2 ${
-										favorited ? "border-[#E8442A] text-[#E8442A]" : ""
-									}`}
-								>
-									<Heart
-										className={`w-4 h-4 ${favorited ? "fill-[#E8442A] text-[#E8442A]" : ""}`}
-									/>
-									{favorited ? "Saved" : "Save listing"}
-								</Button>
+								{isLandlord ? (
+									<Button
+										onClick={() => setShowEditModal(true)}
+										variant="outline"
+										className="w-full flex items-center gap-2 border-[#E8442A] text-[#E8442A] hover:bg-[#E8442A] hover:text-white"
+									>
+										<Pencil className="w-4 h-4" />
+										Edit listing
+									</Button>
+								) : (
+									<>
+										<Button
+											onClick={handleFavorite}
+											disabled={checkingFavorite}
+											variant="outline"
+											className={`w-full flex items-center gap-2 ${
+												favorited ? "border-[#E8442A] text-[#E8442A]" : ""
+											}`}
+										>
+											<Heart
+												className={`w-4 h-4 ${favorited ? "fill-[#E8442A] text-[#E8442A]" : ""}`}
+											/>
+											{favorited ? "Saved" : "Save listing"}
+										</Button>
 
-								<ContactLandlordModal
-									open={showContact}
-									onClose={() => setShowContact(false)}
-									phone={listing.landlordPhone}
-									name={listing.landlordName}
-									listingTitle={listing.title}
-								/>
+										<ContactLandlordModal
+											open={showContact}
+											onClose={() => setShowContact(false)}
+											phone={listing.landlordPhone}
+											name={listing.landlordName}
+											listingTitle={listing.title}
+										/>
 
-								<Button
-									className="w-full bg-[#E8442A] hover:bg-[#d03d25] text-white"
-									onClick={() => setShowContact(true)}
-								>
-									Contact landlord
-								</Button>
+										<Button
+											className="w-full bg-[#E8442A] hover:bg-[#d03d25] text-white"
+											onClick={() => setShowContact(true)}
+										>
+											Contact landlord
+										</Button>
+									</>
+								)}
 							</div>
 						</div>
 					</div>
 				</div>
+
+				{listing && (
+					<EditListingModal
+						open={showEditModal}
+						onClose={() => setShowEditModal(false)}
+						listing={listing}
+						onSuccess={() => {
+							fetchListing();
+						}}
+					/>
+				)}
 			</div>
 		</div>
 	);
