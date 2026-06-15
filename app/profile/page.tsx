@@ -11,6 +11,7 @@ import { Camera, Heart, Home } from "lucide-react";
 import ListingCard from "@/components/listingcard";
 import { toast } from "sonner";
 import EmptyState from "@/components/emptystate";
+import ListingStatusBadge from "@/components/listingstatusbadge";
 
 type Tab = "listings" | "favorites";
 
@@ -18,7 +19,7 @@ export default function ProfilePage() {
 	const router = useRouter();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [activeTab, setActiveTab] = useState<Tab>("listings");
-	const [myListings, setMyListings] = useState<Listing[]>([]);
+	const [listings, setListings] = useState<Listing[]>([]);
 	const [favorites, setFavorites] = useState<FavoriteListing[]>([]);
 	const [loadingListings, setLoadingListings] = useState(true);
 	const [loadingFavorites, setLoadingFavorites] = useState(true);
@@ -52,7 +53,7 @@ export default function ProfilePage() {
 					limit: 8,
 				}),
 			);
-			setMyListings(result.data as Listing[]);
+			setListings(result.data as Listing[]);
 			setListingsTotalPages(result.totalPages);
 		} catch (e) {
 			toast.error("Failed to load your listings");
@@ -214,7 +215,7 @@ export default function ProfilePage() {
 							<span className="text-xs">My listings</span>
 						</div>
 						<p className="text-2xl font-semibold text-gray-900">
-							{loadingListings ? "—" : myListings?.length}
+							{loadingListings ? "—" : listings?.length}
 						</p>
 					</div>
 					<div className="bg-gray-50 rounded-xl p-4">
@@ -267,7 +268,7 @@ export default function ProfilePage() {
 									</div>
 								))}
 							</div>
-						) : myListings?.length === 0 ? (
+						) : listings?.length === 0 ? (
 							<EmptyState
 								type="listings"
 								onAction={() =>
@@ -280,8 +281,23 @@ export default function ProfilePage() {
 						) : (
 							<>
 								<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-									{myListings?.map((listing) => (
-										<ListingCard key={listing.id} listing={listing} />
+									{listings?.map((listing) => (
+										<div key={listing.id} className="space-y-1">
+											<ListingCard listing={listing} />
+											<ListingStatusBadge
+												listingId={listing.id}
+												initialStatus={listing.status as any}
+												onStatusChange={(newStatus) => {
+													setListings((prev) =>
+														prev.map((l) =>
+															l.id === listing.id
+																? { ...l, status: newStatus }
+																: l,
+														),
+													);
+												}}
+											/>
+										</div>
 									))}
 								</div>
 								{listingsTotalPages > 1 && (

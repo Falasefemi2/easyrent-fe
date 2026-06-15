@@ -180,6 +180,10 @@ export class ApiService extends Context.Service<
 			},
 			ApiError
 		>;
+		readonly updateListingStatus: (
+			id: string,
+			status: "avaiable" | "rented" | "inative",
+		) => Effect.Effect<Listing, ApiError>;
 	}
 >()("easyrent/ApiService") {
 	static readonly layer = Layer.effect(
@@ -580,6 +584,21 @@ export class ApiService extends Context.Service<
 						),
 					),
 			);
+			const updateListingStatus = Effect.fn("ApiService.updateListingStatus")(
+				(
+					id: string,
+					status: "avaiable" | "rented" | "inative",
+				): Effect.Effect<Listing, ApiError> =>
+					makeAuthRequest((client) =>
+						HttpClientRequest.patch(`/listings/${id}/status`).pipe(
+							HttpClientRequest.bodyJsonUnsafe({ status }),
+							client.execute,
+							Effect.flatMap((response) => response.json),
+							Effect.map((json) => json as unknown as Listing),
+							Effect.mapError(mapError),
+						),
+					),
+			);
 
 			return ApiService.of({
 				signUp,
@@ -598,6 +617,7 @@ export class ApiService extends Context.Service<
 				checkFavorite,
 				uploadAvatar,
 				getMe,
+				updateListingStatus,
 			});
 		}),
 	).pipe(Layer.provide(TokenStore.layer));

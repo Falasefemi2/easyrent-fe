@@ -151,6 +151,16 @@ export default function ListingCard({
 								Available
 							</span>
 						)}
+						{listing.status === "rented" && (
+							<span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+								Rented
+							</span>
+						)}
+						{listing.status === "inative" && (
+							<span className="text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
+								Inactive
+							</span>
+						)}
 					</div>
 				</div>
 			</div>
