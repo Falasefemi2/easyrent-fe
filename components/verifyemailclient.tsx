@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { runApi } from "@/lib/api/runtime";
+import { toast } from "sonner";
 
 export default function VerifyEmailPage() {
 	const searchParams = useSearchParams();
@@ -23,12 +24,12 @@ export default function VerifyEmailPage() {
 
 		runApi((api) => api.verifyEmail(token))
 			.then(() => {
-				console.log("Email verified successfully");
+				toast.success("Email verified successfully");
 				setStatus("success");
 				setTimeout(() => router.push("/sign-in"), 3000);
 			})
 			.catch((e: any) => {
-				console.error("Verify error:", e);
+				toast.error("Verify error:", e);
 				setStatus("error");
 				setMessage(
 					e?.message ?? "Verification failed. The link may have expired.",
