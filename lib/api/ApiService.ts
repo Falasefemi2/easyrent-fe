@@ -184,6 +184,7 @@ export class ApiService extends Context.Service<
 			id: string,
 			status: "avaiable" | "rented" | "inative",
 		) => Effect.Effect<Listing, ApiError>;
+		readonly verifyEmail: (token: string) => Effect.Effect<void, ApiError>;
 	}
 >()("easyrent/ApiService") {
 	static readonly layer = Layer.effect(
@@ -600,6 +601,16 @@ export class ApiService extends Context.Service<
 					),
 			);
 
+			const verifyEmail = Effect.fn("ApiService.verifyEmail")(
+				(token: string): Effect.Effect<void, ApiError> =>
+					HttpClientRequest.post("/auth/verify-email").pipe(
+						HttpClientRequest.bodyJsonUnsafe({ token }),
+						baseClient.execute,
+						Effect.asVoid,
+						Effect.mapError(mapError),
+					),
+			);
+
 			return ApiService.of({
 				signUp,
 				signIn,
@@ -618,6 +629,7 @@ export class ApiService extends Context.Service<
 				uploadAvatar,
 				getMe,
 				updateListingStatus,
+				verifyEmail,
 			});
 		}),
 	).pipe(Layer.provide(TokenStore.layer));
