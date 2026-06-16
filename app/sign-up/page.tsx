@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { runApi } from "@/lib/api/runtime";
 import { toast } from "sonner";
@@ -20,7 +21,7 @@ export default function SignUpPage() {
 	});
 	const [loading, setLoading] = useState(false);
 
-	const handleSubmit = async (e: React.SubmitEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
 		if (form.password !== form.confirmPassword) {
@@ -47,7 +48,7 @@ export default function SignUpPage() {
 			toast.success("Account created successfully! Welcome to EasyRent.");
 			router.push("/");
 			router.refresh();
-		} catch (e) {
+		} catch (_e) {
 			toast.error("Something went wrong. Email may already be registered.");
 		} finally {
 			setLoading(false);
@@ -125,8 +126,7 @@ export default function SignUpPage() {
 
 						<div className="space-y-2">
 							<Label>Password</Label>
-							<Input
-								type="password"
+							<PasswordInput
 								placeholder="Min. 8 characters"
 								value={form.password}
 								onChange={(e) =>
@@ -141,8 +141,7 @@ export default function SignUpPage() {
 
 						<div className="space-y-2">
 							<Label>Confirm password</Label>
-							<Input
-								type="password"
+							<PasswordInput
 								placeholder="••••••••"
 								value={form.confirmPassword}
 								onChange={(e) =>
