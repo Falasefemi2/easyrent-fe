@@ -20,6 +20,7 @@ export default function SignUpPage() {
 		confirmPassword: "",
 	});
 	const [loading, setLoading] = useState(false);
+	const [submitted, setSubmitted] = useState(false);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -45,9 +46,10 @@ export default function SignUpPage() {
 					password: form.password,
 				}),
 			);
+			setSubmitted(true);
 			toast.success("Account created successfully! Welcome to EasyRent.");
-			router.push("/");
-			router.refresh();
+			// router.push("/");
+			// router.refresh();
 		} catch (_e) {
 			toast.error("Something went wrong. Email may already be registered.");
 		} finally {
@@ -55,6 +57,38 @@ export default function SignUpPage() {
 		}
 	};
 
+	if (submitted) {
+		return (
+			<div className="min-h-screen bg-white flex flex-col">
+				{/* Header */}
+				<div className="border-b border-gray-100 px-6 py-4">
+					<Link href="/" className="text-xl font-semibold text-[#E8442A]">
+						EasyRent
+					</Link>
+				</div>
+				<div className="flex-1 flex items-center justify-center px-4">
+					<div className="w-full max-w-sm text-center space-y-4">
+						<div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto">
+							<span className="text-3xl">📧</span>
+						</div>
+						<h1 className="text-2xl font-semibold text-gray-900">
+							Check your email
+						</h1>
+						<p className="text-sm text-gray-500">
+							We sent a verification link to your email. Click it to activate
+							your account.
+						</p>
+						<Link
+							href="/sign-in"
+							className="text-sm text-[#E8442A] hover:underline block"
+						>
+							Already verified? Sign in
+						</Link>
+					</div>
+				</div>
+			</div>
+		);
+	}
 	return (
 		<div className="min-h-screen bg-white flex flex-col">
 			{/* Header */}
