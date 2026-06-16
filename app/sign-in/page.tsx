@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { runApi } from "@/lib/api/runtime";
 import { toast } from "sonner";
@@ -23,7 +24,7 @@ export default function SignInPage() {
 			toast.success("Welcome back! You have successfully signed in.");
 			router.push("/");
 			router.refresh();
-		} catch (e) {
+		} catch (_e) {
 			toast.error("Invalid email or password. Please try again.");
 		} finally {
 			setLoading(false);
@@ -70,8 +71,7 @@ export default function SignInPage() {
 
 						<div className="space-y-2">
 							<Label>Password</Label>
-							<Input
-								type="password"
+							<PasswordInput
 								placeholder="••••••••"
 								value={form.password}
 								onChange={(e) =>
@@ -94,7 +94,7 @@ export default function SignInPage() {
 					</form>
 
 					<p className="text-center text-sm text-gray-500 mt-6">
-						Don't have an account?{" "}
+						Don&apos;t have an account?{" "}
 						<Link
 							href="/sign-up"
 							className="text-[#E8442A] font-medium hover:underline"
