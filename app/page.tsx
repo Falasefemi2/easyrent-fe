@@ -184,11 +184,11 @@ export default function HomePage() {
 							</div>
 						))}
 					</div>
-				) : listings.length === 0 ? (
+				) : listings?.length === 0 ? (
 					<EmptyState type="search" />
 				) : (
 					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-						{listings.map((listing) => (
+						{listings?.map((listing) => (
 							<ListingCard
 								key={listing.id}
 								listing={listing}
