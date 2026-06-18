@@ -12,125 +12,114 @@ import ListingCard from "@/components/listingcard";
 import { toast } from "sonner";
 import EmptyState from "@/components/emptystate";
 import ListingStatusBadge from "@/components/listingstatusbadge";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 type Tab = "listings" | "favorites";
 
 export default function ProfilePage() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [activeTab, setActiveTab] = useState<Tab>("listings");
-	const [listings, setListings] = useState<Listing[]>([]);
-	const [favorites, setFavorites] = useState<FavoriteListing[]>([]);
-	const [loadingListings, setLoadingListings] = useState(true);
-	const [loadingFavorites, setLoadingFavorites] = useState(true);
 	const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-	const [uploadingAvatar, setUploadingAvatar] = useState(false);
 	const [listingsPage, setListingsPage] = useState(1);
 	const [favoritesPage, setFavoritesPage] = useState(1);
-	const [listingsTotalPages, setListingsTotalPages] = useState(1);
-	const [favoritesTotalPages, setFavoritesTotalPages] = useState(1);
-	const [user, setUser] = useState<{ fullname: string; email: string } | null>(
-		null,
-	);
+
+	useEffect(() => {
+		if (typeof window !== "undefined" && !localStorage.getItem("accessToken")) {
+			router.push("/sign-in");
+		}
+	}, [router]);
+
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem("avatarUrl");
+			if (saved) setAvatarUrl(saved);
+		}
+	}, []);
+
+	// Fetch user profile
+	const { data: user } = useQuery({
+		queryKey: queryKeys.user.me,
+		queryFn: () => runApi((api) => api.getMe()),
+		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+	});
+
+	useEffect(() => {
+		if (user) {
+			localStorage.setItem("userFullname", (user as any).fullname);
+			localStorage.setItem("userEmail", (user as any).email);
+			if ((user as any).avatarUrl) {
+				setAvatarUrl((user as any).avatarUrl);
+				localStorage.setItem("avatarUrl", (user as any).avatarUrl);
+			}
+		}
+	}, [user]);
+
+	// Fetch user's listings
+	const { data: listingsData, isLoading: loadingListings } = useQuery({
+		queryKey: queryKeys.listings.mine({ page: listingsPage, limit: 8 }),
+		queryFn: () =>
+			runApi((api) =>
+				api.getMyListings({
+					page: listingsPage,
+					limit: 8,
+				}),
+			),
+		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+	});
+
+	const listings = listingsData?.data ?? [];
+	const listingsTotalPages = listingsData?.totalPages ?? 1;
 
 	useEffect(() => {
 		const handleListingCreated = () => {
+			queryClient.invalidateQueries({ queryKey: ["listings", "mine"] });
 			setListingsPage(1);
-			fetchMyListings();
 		};
 		window.addEventListener("listing-created", handleListingCreated);
 		return () => {
 			window.removeEventListener("listing-created", handleListingCreated);
 		};
-	}, []);
+	}, [queryClient]);
 
-	const fetchMyListings = async () => {
-		setLoadingListings(true);
-		try {
-			const result = await runApi((api) =>
-				api.getMyListings({
-					page: listingsPage,
+	// Fetch user's favorites
+	const { data: favoritesData, isLoading: loadingFavorites } = useQuery({
+		queryKey: queryKeys.favorites.list({ page: favoritesPage, limit: 8 }),
+		queryFn: () =>
+			runApi((api) =>
+				api.getMyFavorites({
+					page: favoritesPage,
 					limit: 8,
 				}),
-			);
-			setListings(result.data as Listing[]);
-			setListingsTotalPages(result.totalPages);
-		} catch (e) {
-			toast.error("Failed to load your listings");
+			),
+		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+	});
+
+	const favorites = favoritesData?.data ?? [];
+	const favoritesTotalPages = favoritesData?.totalPages ?? 1;
+
+	// Avatar upload mutation
+	const uploadAvatarMutation = useMutation({
+		mutationFn: (file: File) => runApi((api) => api.uploadAvatar(file)),
+		onSuccess: (result) => {
+			const url = (result as any).avatarUrl;
+			setAvatarUrl(url);
+			localStorage.setItem("avatarUrl", url);
+			queryClient.invalidateQueries({ queryKey: queryKeys.user.me });
+			toast.success("Profile picture updated successfully!");
+		},
+		onError: (e) => {
+			toast.error("Failed to upload profile picture");
 			console.error(e);
-		} finally {
-			setLoadingListings(false);
-		}
-	};
-
-	useEffect(() => {
-		if (!localStorage.getItem("accessToken")) {
-			router.push("/sign-in");
-			return;
-		}
-		const saved = localStorage.getItem("avatarUrl");
-		if (saved) setAvatarUrl(saved);
-
-		// Fetch user profile
-		runApi((api) => api.getMe())
-			.then((u) => {
-				setUser(u as any);
-				localStorage.setItem("userFullname", (u as any).fullname);
-				localStorage.setItem("userEmail", (u as any).email);
-				if (!saved && (u as any).avatarUrl) {
-					setAvatarUrl((u as any).avatarUrl);
-					localStorage.setItem("avatarUrl", (u as any).avatarUrl);
-				}
-			})
-			.catch(() => {
-				toast.error("Failed to load user profile");
-			});
-	}, [router]);
-
-	useEffect(() => {
-		fetchMyListings();
-	}, [listingsPage]);
-
-	useEffect(() => {
-		const fetchFavorites = async () => {
-			setLoadingFavorites(true);
-			try {
-				const result = await runApi((api) =>
-					api.getMyFavorites({
-						page: favoritesPage,
-						limit: 8,
-					}),
-				);
-
-				setFavorites(result.data as unknown as FavoriteListing[]);
-				setFavoritesTotalPages(result.totalPages);
-			} catch (e) {
-				toast.error("Failed to load your favorite properties");
-				console.error(e);
-			} finally {
-				setLoadingFavorites(false);
-			}
-		};
-		fetchFavorites();
-	}, [favoritesPage]);
+		},
+	});
 
 	const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
-
-		setUploadingAvatar(true);
-		try {
-			const result = await runApi((api) => api.uploadAvatar(file));
-			const url = (result as any).avatarUrl;
-			setAvatarUrl(url);
-			localStorage.setItem("avatarUrl", url); // persist
-			toast.success("Profile picture updated successfully!");
-		} catch (e) {
-			toast.error("Failed to upload profile picture");
-			console.error(e);
-		} finally {
-			setUploadingAvatar(false);
-		}
+		uploadAvatarMutation.mutate(file);
 	};
 
 	return (
@@ -173,10 +162,10 @@ export default function ProfilePage() {
 							{/* Upload button */}
 							<button
 								onClick={() => fileInputRef.current?.click()}
-								disabled={uploadingAvatar}
+								disabled={uploadAvatarMutation.isPending}
 								className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#E8442A] rounded-full flex items-center justify-center shadow-md hover:bg-[#d03d25] transition-colors"
 							>
-								{uploadingAvatar ? (
+								{uploadAvatarMutation.isPending ? (
 									<div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
 								) : (
 									<Camera className="w-3.5 h-3.5 text-white" />
@@ -288,13 +277,9 @@ export default function ProfilePage() {
 												listingId={listing.id}
 												initialStatus={listing.status as any}
 												onStatusChange={(newStatus) => {
-													setListings((prev) =>
-														prev.map((l) =>
-															l.id === listing.id
-																? { ...l, status: newStatus }
-																: l,
-														),
-													);
+													queryClient.invalidateQueries({
+														queryKey: ["listings", "mine"],
+													});
 												}}
 											/>
 										</div>

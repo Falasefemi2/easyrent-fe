@@ -26,7 +26,7 @@ export interface Listing {
 }
 
 export interface ListingWithMedia extends Listing {
-	media: ListingMedia[];
+	media: readonly ListingMedia[];
 	landlordPhone?: string | null;
 	landlordName?: string | null;
 }
@@ -45,10 +45,7 @@ export interface AuthTokens {
 }
 
 export interface FavoriteListing extends Listing {
-	media: ListingMedia[];
+	media: readonly ListingMedia[];
 	favoritedAt: string;
 }
 
-export interface ListingWithMedia extends Listing {
-	media: ListingMedia[];
-}

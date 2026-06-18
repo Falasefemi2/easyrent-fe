@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
@@ -8,6 +8,8 @@ import type { Listing } from "@/lib/types";
 import { runApi } from "@/lib/api/runtime";
 import { formatPrice } from "@/lib/utils";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 export default function ListingCard({
 	listing,
@@ -16,48 +18,52 @@ export default function ListingCard({
 	listing: Listing;
 	initialFavorited?: boolean;
 }) {
+	const queryClient = useQueryClient();
 	const [favorited, setFavorited] = useState(initialFavorited);
-	const [loading, setLoading] = useState(false);
 
-	const handleFavorite = async (e: React.MouseEvent) => {
+	useEffect(() => {
+		setFavorited(initialFavorited);
+	}, [initialFavorited]);
+
+	const toggleFavoriteMutation = useMutation({
+		mutationFn: async () => {
+			if (favorited) {
+				await runApi((api) => api.removeFavorite(listing.id));
+			} else {
+				await runApi((api) => api.addFavorite(listing.id));
+			}
+		},
+		onSuccess: () => {
+			const saved = localStorage.getItem("favoritedIds");
+			let ids: string[] = saved ? JSON.parse(saved) : [];
+			if (favorited) {
+				ids = ids.filter((id) => id !== listing.id);
+			} else {
+				ids = [...ids, listing.id];
+			}
+			localStorage.setItem("favoritedIds", JSON.stringify(ids));
+
+			toast.success(favorited ? "Removed from favorites" : "Added to favorites!");
+			setFavorited(!favorited);
+
+			queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
+			queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
+			queryClient.invalidateQueries({ queryKey: queryKeys.favorites.check(listing.id) });
+		},
+		onError: (e) => {
+			toast.error("Failed to update favorites. Please try again.");
+			console.error(e);
+		},
+	});
+
+	const handleFavorite = (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
 		if (!localStorage.getItem("accessToken")) {
 			toast.error("Please sign in to favorite properties");
 			return;
 		}
-		setLoading(true);
-		try {
-			if (favorited) {
-				await runApi((api) => api.removeFavorite(listing.id));
-				// Remove from localStorage cache
-				const saved = localStorage.getItem("favoritedIds");
-				if (saved) {
-					const ids: string[] = JSON.parse(saved);
-					localStorage.setItem(
-						"favoritedIds",
-						JSON.stringify(ids.filter((id) => id !== listing.id)),
-					);
-				}
-				toast.success("Removed from favorites");
-			} else {
-				await runApi((api) => api.addFavorite(listing.id));
-				// Add to localStorage cache
-				const saved = localStorage.getItem("favoritedIds");
-				const ids: string[] = saved ? JSON.parse(saved) : [];
-				localStorage.setItem(
-					"favoritedIds",
-					JSON.stringify([...ids, listing.id]),
-				);
-				toast.success("Added to favorites!");
-			}
-			setFavorited(!favorited);
-		} catch (e) {
-			toast.error("Failed to update favorites. Please try again.");
-			console.error(e);
-		} finally {
-			setLoading(false);
-		}
+		toggleFavoriteMutation.mutate();
 	};
 
 	const coverImage = listing.coverImage || "";
@@ -98,7 +104,7 @@ export default function ListingCard({
 
 					<button
 						onClick={handleFavorite}
-						disabled={loading}
+						disabled={toggleFavoriteMutation.isPending}
 						className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
 					>
 						<Heart

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { runApi } from "@/lib/api/runtime";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function Navbar({
 	onCreateListing,
@@ -13,6 +14,7 @@ export default function Navbar({
 	onCreateListing?: () => void;
 }) {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 
 	useEffect(() => {
@@ -30,20 +32,26 @@ export default function Navbar({
 		};
 	}, []);
 
-	const handleSignOut = async () => {
-		try {
-			await runApi((api) => api.signOut());
+	const signOutMutation = useMutation({
+		mutationFn: () => runApi((api) => api.signOut()),
+		onSuccess: () => {
 			localStorage.removeItem("favoritedIds");
 			localStorage.removeItem("avatarUrl");
 			localStorage.removeItem("userFullname");
 			localStorage.removeItem("userEmail");
+			queryClient.clear();
 			toast.success("Successfully signed out");
 			router.push("/");
 			router.refresh();
-			window.location.href="/"
-		} catch (e) {
+			window.location.href = "/";
+		},
+		onError: () => {
 			toast.error("Failed to sign out");
-		}
+		},
+	});
+
+	const handleSignOut = () => {
+		signOutMutation.mutate();
 	};
 
 	return (
