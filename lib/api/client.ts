@@ -46,6 +46,8 @@ export class ListingWithMedia extends Schema.Class<ListingWithMedia>(
 	longitude: Schema.NullOr(Schema.Number),
 	coverImage: Schema.NullOr(Schema.String),
 	media: Schema.Array(ListingMedia),
+	landlordPhone: Schema.NullOr(Schema.String).pipe(Schema.optional),
+	landlordName: Schema.NullOr(Schema.String).pipe(Schema.optional),
 }) {}
 
 export class PaginatedListings extends Schema.Class<PaginatedListings>(

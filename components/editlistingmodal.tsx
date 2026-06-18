@@ -16,6 +16,8 @@ import { runApi } from "@/lib/api/runtime";
 import { X, Upload, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import type { ListingWithMedia } from "@/lib/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
@@ -52,8 +54,8 @@ export default function EditListingModal({
 	listing,
 	onSuccess,
 }: EditListingModalProps) {
+	const queryClient = useQueryClient();
 	const [step, setStep] = useState(1);
-	const [loading, setLoading] = useState(false);
 
 	const [step1, setStep1] = useState<Step1Data>({
 		title: listing.title,
@@ -136,10 +138,8 @@ export default function EditListingModal({
 		setPreviews(newPreviews);
 	};
 
-	const handleSubmit = async () => {
-		setLoading(true);
-
-		try {
+	const editListingMutation = useMutation({
+		mutationFn: async () => {
 			// 1. Update listing details
 			await runApi((api) =>
 				api.updateListing(listing.id, {
@@ -166,16 +166,22 @@ export default function EditListingModal({
 					),
 				);
 			}
-
+		},
+		onSuccess: () => {
 			toast.success("Listing updated successfully!");
+			queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
+			queryClient.invalidateQueries({ queryKey: queryKeys.listings.detail(listing.id) });
 			handleClose();
 			onSuccess();
-		} catch (e) {
+		},
+		onError: (e) => {
 			toast.error("Something went wrong while updating. Please try again.");
 			console.error(e);
-		} finally {
-			setLoading(false);
-		}
+		},
+	});
+
+	const handleSubmit = () => {
+		editListingMutation.mutate();
 	};
 
 	const validateStep1 = () => {
@@ -557,7 +563,7 @@ export default function EditListingModal({
 							variant="outline"
 							onClick={() => setStep(step - 1)}
 							className="flex-1"
-							disabled={loading}
+							disabled={editListingMutation.isPending}
 						>
 							Back
 						</Button>
@@ -577,10 +583,10 @@ export default function EditListingModal({
 					) : (
 						<Button
 							onClick={handleSubmit}
-							disabled={loading}
+							disabled={editListingMutation.isPending}
 							className="flex-1 bg-[#E8442A] hover:bg-[#d03d25] text-white"
 						>
-							{loading ? "Saving..." : "Save changes"}
+							{editListingMutation.isPending ? "Saving..." : "Save changes"}
 						</Button>
 					)}
 				</div>

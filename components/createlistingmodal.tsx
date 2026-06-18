@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { runApi } from "@/lib/api/runtime";
 import { X, Upload, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
@@ -49,8 +51,8 @@ export default function CreateListingModal({
 	onClose,
 	onSuccess,
 }: CreateListingModalProps) {
+	const queryClient = useQueryClient();
 	const [step, setStep] = useState(1);
-	const [loading, setLoading] = useState(false);
 
 	const [step1, setStep1] = useState<Step1Data>({
 		title: "",
@@ -127,10 +129,8 @@ export default function CreateListingModal({
 		setPreviews(newPreviews);
 	};
 
-	const handleSubmit = async () => {
-		setLoading(true);
-
-		try {
+	const createListingMutation = useMutation({
+		mutationFn: async () => {
 			// 1. Create listing
 			const listing = await runApi((api) =>
 				api.createListing({
@@ -155,17 +155,23 @@ export default function CreateListingModal({
 					),
 				);
 			}
-
+			return listing;
+		},
+		onSuccess: () => {
 			toast.success("Listing published successfully!");
+			queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
 			reset();
 			onSuccess();
 			onClose();
-		} catch (e) {
+		},
+		onError: (e) => {
 			toast.error("Something went wrong while publishing. Please try again.");
 			console.error(e);
-		} finally {
-			setLoading(false);
-		}
+		},
+	});
+
+	const handleSubmit = () => {
+		createListingMutation.mutate();
 	};
 
 	const validateStep1 = () => {
@@ -525,7 +531,7 @@ export default function CreateListingModal({
 							variant="outline"
 							onClick={() => setStep(step - 1)}
 							className="flex-1"
-							disabled={loading}
+							disabled={createListingMutation.isPending}
 						>
 							Back
 						</Button>
@@ -545,10 +551,10 @@ export default function CreateListingModal({
 					) : (
 						<Button
 							onClick={handleSubmit}
-							disabled={loading}
+							disabled={createListingMutation.isPending}
 							className="flex-1 bg-[#E8442A] hover:bg-[#d03d25] text-white"
 						>
-							{loading ? "Publishing..." : "Publish listing"}
+							{createListingMutation.isPending ? "Publishing..." : "Publish listing"}
 						</Button>
 					)}
 				</div>

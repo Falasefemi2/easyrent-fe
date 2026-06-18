@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { runApi } from "@/lib/api/runtime";
 import { type Listing } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ListingCard from "@/components/listingcard";
 import { toast } from "sonner";
 import EmptyState from "@/components/emptystate";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 const FILTERS = [
 	"All",
@@ -20,28 +22,22 @@ const FILTERS = [
 ];
 
 export default function HomePage() {
-	const [listings, setListings] = useState<Listing[]>([]);
-	const [loading, setLoading] = useState(true);
+	const queryClient = useQueryClient();
 	const [page, setPage] = useState(1);
-	const [totalPages, setTotalPages] = useState(1);
 	const [activeFilter, setActiveFilter] = useState("All");
-	const [favoritedIds, setFavoritedIds] = useState<Set<string>>(() => {
-		if (typeof window === "undefined") return new Set();
-		const saved = localStorage.getItem("favoritedIds");
-		return saved ? new Set(JSON.parse(saved)) : new Set();
-	});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");
 
 	useEffect(() => {
 		const handleListingCreated = () => {
-			fetchListings(1);
+			queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
+			setPage(1);
 		};
 		window.addEventListener("listing-created", handleListingCreated);
 		return () => {
 			window.removeEventListener("listing-created", handleListingCreated);
 		};
-	}, []);
+	}, [queryClient]);
 
 	const getFilterParams = (filter: string) => {
 		switch (filter) {
@@ -67,50 +63,38 @@ export default function HomePage() {
 		return () => clearTimeout(timer);
 	}, [searchQuery]);
 
-	useEffect(() => {
-		fetchListings(1, activeFilter, debouncedSearch);
-	}, [debouncedSearch]);
+	// Fetch listings
+	const { data, isLoading } = useQuery({
+		queryKey: queryKeys.listings.list({
+			page,
+			limit: 12,
+			...getFilterParams(activeFilter),
+			...(debouncedSearch ? { search: debouncedSearch } : {}),
+		}),
+		queryFn: () =>
+			runApi((api) =>
+				api.getListings({
+					page,
+					limit: 12,
+					...getFilterParams(activeFilter),
+					...(debouncedSearch ? { search: debouncedSearch } : {}),
+				}),
+			),
+	});
 
-	const fetchListings = useCallback(
-		async (p = 1, filter = activeFilter, search = debouncedSearch) => {
-			setLoading(true);
-			try {
-				const result = await runApi((api) =>
-					api.getListings({
-						page: p,
-						limit: 12,
-						...getFilterParams(filter),
-						...(search ? { search } : {}),
-					}),
-				);
-				setListings(result.data as Listing[]);
-				setTotalPages(result.totalPages);
-			} catch (e) {
-				toast.error("Failed to load listings");
-				console.error(e);
-			} finally {
-				setLoading(false);
-			}
-		},
-		[activeFilter, debouncedSearch],
+	const listings = data?.data ?? [];
+	const totalPages = data?.totalPages ?? 1;
+
+	// Fetch favorites
+	const { data: favoritesData } = useQuery({
+		queryKey: queryKeys.favorites.list({ page: 1, limit: 100 }),
+		queryFn: () => runApi((api) => api.getMyFavorites({ page: 1, limit: 100 })),
+		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+	});
+
+	const favoritedIds = new Set(
+		(favoritesData?.data as any[] | undefined)?.map((f: any) => f.id) ?? [],
 	);
-
-	useEffect(() => {
-		fetchListings(page);
-	}, [page, fetchListings]);
-
-	useEffect(() => {
-		if (!localStorage.getItem("accessToken")) return;
-		runApi((api) => api.getMyFavorites({ page: 1, limit: 100 }))
-			.then((result) => {
-				const ids = (result.data as any[]).map((f: any) => f.id);
-				setFavoritedIds(new Set(ids));
-				localStorage.setItem("favoritedIds", JSON.stringify(ids));
-			})
-			.catch(() => {
-				toast.error("Failed to load favorites");
-			});
-	}, []);
 
 	return (
 		<div className="min-h-screen bg-white">
@@ -156,7 +140,6 @@ export default function HomePage() {
 								onClick={() => {
 									setActiveFilter(filter);
 									setPage(1);
-									fetchListings(1, filter);
 								}}
 								className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap border transition-colors ${
 									activeFilter === filter
@@ -173,7 +156,7 @@ export default function HomePage() {
 
 			{/* Listings grid */}
 			<main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 sm:pb-8">
-				{loading ? (
+				{isLoading ? (
 					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 						{Array.from({ length: 8 }).map((_, i) => (
 							<div key={i} className="space-y-3">

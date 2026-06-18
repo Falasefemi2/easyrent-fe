@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { runApi } from "@/lib/api/runtime";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 type Status = "avaiable" | "rented" | "inative";
 
@@ -39,32 +41,43 @@ export default function ListingStatusBadge({
 	initialStatus: Status;
 	onStatusChange?: (status: Status) => void;
 }) {
+	const queryClient = useQueryClient();
 	const [status, setStatus] = useState<Status>(initialStatus);
-	const [loading, setLoading] = useState(false);
 	const config = STATUS_CONFIG[status];
 
-	const handleToggle = async (e: React.MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		setLoading(true);
-		try {
+	useEffect(() => {
+		setStatus(initialStatus);
+	}, [initialStatus]);
+
+	const updateStatusMutation = useMutation({
+		mutationFn: () =>
+			runApi((api) =>
+				(api as any).updateListingStatus(listingId, config.next),
+			),
+		onSuccess: () => {
+			const nextStatus = config.next;
 			const successMessages: Record<Status, string> = {
 				avaiable: "Listing is now available",
 				rented: "Listing has been marked as rented",
 				inative: "Listing has been deactivated",
 			};
-			await runApi((api) =>
-				(api as any).updateListingStatus(listingId, config.next),
-			);
-			setStatus(config.next);
-			onStatusChange?.(config.next);
-			toast.success(successMessages[config.next]);
-		} catch (err) {
+			setStatus(nextStatus);
+			onStatusChange?.(nextStatus);
+			toast.success(successMessages[nextStatus]);
+
+			queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
+			queryClient.invalidateQueries({ queryKey: queryKeys.listings.detail(listingId) });
+		},
+		onError: (err) => {
 			console.error(err);
 			toast.error("Failed to update listing status");
-		} finally {
-			setLoading(false);
-		}
+		},
+	});
+
+	const handleToggle = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		updateStatusMutation.mutate();
 	};
 
 	return (
@@ -76,10 +89,10 @@ export default function ListingStatusBadge({
 			</span>
 			<button
 				onClick={handleToggle}
-				disabled={loading}
+				disabled={updateStatusMutation.isPending}
 				className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
 			>
-				{loading ? "Updating..." : config.nextLabel}
+				{updateStatusMutation.isPending ? "Updating..." : config.nextLabel}
 			</button>
 		</div>
 	);

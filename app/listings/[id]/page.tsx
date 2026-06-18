@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -22,97 +22,71 @@ import { formatPrice } from "@/lib/utils";
 import { toast } from "sonner";
 import ContactLandlordModal from "@/components/contactlandlordmodal";
 import EditListingModal from "@/components/editlistingmodal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 export default function ListingDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const router = useRouter();
-	const [listing, setListing] = useState<ListingWithMedia | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [favorited, setFavorited] = useState(false);
+	const queryClient = useQueryClient();
 	const [activeImage, setActiveImage] = useState(0);
-	const [checkingFavorite, setCheckingFavorite] = useState(false);
 	const [showContact, setShowContact] = useState(false);
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
-	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-	const [isLandlord, setIsLandlord] = useState(false);
 
-	const fetchListing = useCallback(async () => {
-		try {
-			const result = await runApi((api) => api.getListingById(id));
-			setListing(result as unknown as ListingWithMedia);
-		} catch (e) {
-			toast.error("Failed to load listing details");
-			console.error(e);
-		} finally {
-			setLoading(false);
-		}
-	}, [id]);
+	// Fetch listing detail
+	const { data: listing, isLoading: loadingListing } = useQuery({
+		queryKey: queryKeys.listings.detail(id),
+		queryFn: async () => {
+			const res = await runApi((api) => api.getListingById(id));
+			return res as unknown as ListingWithMedia;
+		},
+		enabled: !!id,
+	});
 
-	useEffect(() => {
-		fetchListing();
-	}, [fetchListing]);
+	// Fetch current user
+	const { data: user } = useQuery({
+		queryKey: queryKeys.user.me,
+		queryFn: () => runApi((api) => api.getMe()),
+		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+	});
 
-	// Fetch current user to check if they're the landlord
-	useEffect(() => {
-		const token = localStorage.getItem("accessToken");
-		if (!token) return;
+	const currentUserId = (user as unknown as { id: string })?.id ?? null;
+	const isLandlord = currentUserId && listing ? currentUserId === listing.landlordId : false;
 
-		runApi((api) => api.getMe())
-			.then((u) => {
-				const user = u as unknown as { id: string };
-				setCurrentUserId(user.id);
-			})
-			.catch(() => {});
-	}, []);
+	// Check favorite status
+	const { data: initialFavoritedData } = useQuery({
+		queryKey: queryKeys.favorites.check(id),
+		queryFn: () => runApi((api) => api.checkFavorite(id)),
+		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken") && !!id,
+	});
 
-	// Check if current user is the landlord
-	useEffect(() => {
-		if (currentUserId && listing?.landlordId) {
-			setIsLandlord(currentUserId === listing.landlordId);
-		}
-	}, [currentUserId, listing]);
+	const favorited = !!initialFavoritedData;
 
-	useEffect(() => {
-		const checkFavorite = async () => {
-			if (!localStorage.getItem("accessToken")) return;
-			try {
-				const result = await runApi((api) => api.checkFavorite(id));
-				setFavorited(result as unknown as boolean);
-			} catch (e) {
-				console.error(e);
-			}
-		};
-		checkFavorite();
-	}, [id]);
-
-	const handleFavorite = async () => {
-		if (!localStorage.getItem("accessToken")) {
-			toast.error("Please sign in to favorite properties");
-			router.push("/sign-in");
-			return;
-		}
-		setCheckingFavorite(true);
-		try {
+	// Favorite toggling mutation
+	const toggleFavoriteMutation = useMutation({
+		mutationFn: async () => {
 			if (favorited) {
 				await runApi((api) => api.removeFavorite(id));
-				toast.success("Removed from favorites");
 			} else {
 				await runApi((api) => api.addFavorite(id));
-				toast.success("Added to favorites!");
 			}
-			setFavorited(!favorited);
-		} catch (e) {
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: queryKeys.favorites.check(id) });
+			queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
+			queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
+			toast.success(favorited ? "Removed from favorites" : "Added to favorites!");
+		},
+		onError: (e) => {
 			toast.error("Failed to update favorites. Please try again.");
 			console.error(e);
-		} finally {
-			setCheckingFavorite(false);
-		}
-	};
+		},
+	});
 
-	if (loading) {
+	if (loadingListing) {
 		return (
 			<div className="min-h-screen bg-white">
 				<div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
@@ -375,8 +349,15 @@ export default function ListingDetailPage() {
 								) : (
 									<>
 										<Button
-											onClick={handleFavorite}
-											disabled={checkingFavorite}
+											onClick={() => {
+												if (!localStorage.getItem("accessToken")) {
+													toast.error("Please sign in to favorite properties");
+													router.push("/sign-in");
+													return;
+												}
+												toggleFavoriteMutation.mutate();
+											}}
+											disabled={toggleFavoriteMutation.isPending}
 											variant="outline"
 											className={`w-full flex items-center gap-2 ${
 												favorited ? "border-[#E8442A] text-[#E8442A]" : ""
@@ -415,7 +396,9 @@ export default function ListingDetailPage() {
 						onClose={() => setShowEditModal(false)}
 						listing={listing}
 						onSuccess={() => {
-							fetchListing();
+							queryClient.invalidateQueries({
+								queryKey: queryKeys.listings.detail(id),
+							});
 						}}
 					/>
 				)}

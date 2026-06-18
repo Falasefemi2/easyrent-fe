@@ -10,25 +10,30 @@ import { Label } from "@/components/ui/label";
 import { runApi } from "@/lib/api/runtime";
 import { toast } from "sonner";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+
 export default function SignInPage() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [form, setForm] = useState({ email: "", password: "" });
-	const [loading, setLoading] = useState(false);
 
-	const handleSubmit = async (e: React.SubmitEvent) => {
-		e.preventDefault();
-		setLoading(true);
-
-		try {
-			await runApi((api) => api.signIn(form));
+	const loginMutation = useMutation({
+		mutationFn: () => runApi((api) => api.signIn(form)),
+		onSuccess: () => {
 			toast.success("Welcome back! You have successfully signed in.");
+			queryClient.invalidateQueries({ queryKey: queryKeys.user.me });
 			router.push("/");
 			router.refresh();
-		} catch (_e) {
+		},
+		onError: () => {
 			toast.error("Invalid email or password. Please try again.");
-		} finally {
-			setLoading(false);
-		}
+		},
+	});
+
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		loginMutation.mutate();
 	};
 
 	return (
@@ -86,10 +91,10 @@ export default function SignInPage() {
 
 						<Button
 							type="submit"
-							disabled={loading}
+							disabled={loginMutation.isPending}
 							className="w-full bg-[#E8442A] hover:bg-[#d03d25] text-white h-11"
 						>
-							{loading ? "Signing in..." : "Sign in"}
+							{loginMutation.isPending ? "Signing in..." : "Sign in"}
 						</Button>
 					</form>
 

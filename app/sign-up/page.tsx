@@ -9,6 +9,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { runApi } from "@/lib/api/runtime";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 
 export default function SignUpPage() {
 	const router = useRouter();
@@ -19,10 +20,28 @@ export default function SignUpPage() {
 		password: "",
 		confirmPassword: "",
 	});
-	const [loading, setLoading] = useState(false);
 	const [submitted, setSubmitted] = useState(false);
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const registerMutation = useMutation({
+		mutationFn: () =>
+			runApi((api) =>
+				api.signUp({
+					fullname: form.fullname,
+					email: form.email,
+					phone: form.phone,
+					password: form.password,
+				}),
+			),
+		onSuccess: () => {
+			setSubmitted(true);
+			toast.success("Account created successfully! Welcome to EasyRent.");
+		},
+		onError: () => {
+			toast.error("Something went wrong. Email may already be registered.");
+		},
+	});
+
+	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
 		if (form.password !== form.confirmPassword) {
@@ -35,26 +54,7 @@ export default function SignUpPage() {
 			return;
 		}
 
-		setLoading(true);
-
-		try {
-			await runApi((api) =>
-				api.signUp({
-					fullname: form.fullname,
-					email: form.email,
-					phone: form.phone,
-					password: form.password,
-				}),
-			);
-			setSubmitted(true);
-			toast.success("Account created successfully! Welcome to EasyRent.");
-			// router.push("/");
-			// router.refresh();
-		} catch (_e) {
-			toast.error("Something went wrong. Email may already be registered.");
-		} finally {
-			setLoading(false);
-		}
+		registerMutation.mutate();
 	};
 
 	if (submitted) {
@@ -190,10 +190,10 @@ export default function SignUpPage() {
 
 						<Button
 							type="submit"
-							disabled={loading}
+							disabled={registerMutation.isPending}
 							className="w-full bg-[#E8442A] hover:bg-[#d03d25] text-white h-11"
 						>
-							{loading ? "Creating account..." : "Create account"}
+							{registerMutation.isPending ? "Creating account..." : "Create account"}
 						</Button>
 					</form>
 
