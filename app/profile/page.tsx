@@ -43,7 +43,8 @@ export default function ProfilePage() {
 	const { data: user } = useQuery({
 		queryKey: queryKeys.user.me,
 		queryFn: () => runApi((api) => api.getMe()),
-		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+		enabled:
+			typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
 	});
 
 	useEffect(() => {
@@ -67,7 +68,8 @@ export default function ProfilePage() {
 					limit: 8,
 				}),
 			),
-		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+		enabled:
+			typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
 	});
 
 	const listings = listingsData?.data ?? [];
@@ -94,7 +96,8 @@ export default function ProfilePage() {
 					limit: 8,
 				}),
 			),
-		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+		enabled:
+			typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
 	});
 
 	const favorites = favoritesData?.data ?? [];
@@ -204,7 +207,7 @@ export default function ProfilePage() {
 							<span className="text-xs">My listings</span>
 						</div>
 						<p className="text-2xl font-semibold text-gray-900">
-							{loadingListings ? "—" : listings?.length}
+							{loadingListings ? "—" : (listings?.length ?? 0)}
 						</p>
 					</div>
 					<div className="bg-gray-50 rounded-xl p-4">

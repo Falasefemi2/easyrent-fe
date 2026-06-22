@@ -14,7 +14,7 @@ export default function VerifyEmailPage() {
 
 	const { error, isLoading, isSuccess, isError } = useQuery({
 		queryKey: ["verify-email", token],
-		queryFn: () => runApi((api) => api.verifyEmail(token!)),
+		queryFn: () => runApi((api) => api.verifyEmail(token!)).then(() => true),
 		enabled: !!token,
 		retry: false,
 	});
@@ -36,7 +36,8 @@ export default function VerifyEmailPage() {
 	const hasError = !token || isError;
 	const errorMessage = !token
 		? "Invalid verification link"
-		: (error as any)?.message ?? "Verification failed. The link may have expired.";
+		: ((error as any)?.message ??
+			"Verification failed. The link may have expired.");
 
 	return (
 		<div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
