@@ -1,15 +1,15 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import type { Listing } from "@/lib/types";
-import { runApi } from "@/lib/api/runtime";
-import { formatPrice } from "@/lib/utils";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import { runApi } from "@/lib/api/runtime";
 import { queryKeys } from "@/lib/queryKeys";
+import type { Listing, ListingWithMedia } from "@/lib/types";
+import { formatPrice } from "@/lib/utils";
 
 export default function ListingCard({
 	listing,
@@ -43,12 +43,16 @@ export default function ListingCard({
 			}
 			localStorage.setItem("favoritedIds", JSON.stringify(ids));
 
-			toast.success(favorited ? "Removed from favorites" : "Added to favorites!");
+			toast.success(
+				favorited ? "Removed from favorites" : "Added to favorites!",
+			);
 			setFavorited(!favorited);
 
 			queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
 			queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
-			queryClient.invalidateQueries({ queryKey: queryKeys.favorites.check(listing.id) });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.favorites.check(listing.id),
+			});
 		},
 		onError: (e) => {
 			toast.error("Failed to update favorites. Please try again.");
@@ -67,23 +71,41 @@ export default function ListingCard({
 	};
 
 	const coverImage = listing.coverImage || "";
+	const mediaItem = (listing as ListingWithMedia).media?.[0];
+	const mediaUrl = (mediaItem?.url ?? coverImage) || null;
+	const mediaType: "image" | "video" | null = mediaItem?.type
+		? mediaItem.type
+		: mediaUrl && /\.(mp4|webm|ogg)$/i.test(mediaUrl)
+			? "video"
+			: mediaUrl
+				? "image"
+				: null;
 	const priceFormatted = formatPrice(listing.price); // Safe call
 
 	return (
 		<Link href={`/listings/${listing.id}`}>
 			<div className="group cursor-pointer">
 				<div className="relative aspect-4/3 rounded-xl overflow-hidden bg-gray-100 mb-3">
-					{coverImage ? (
-						<Image
-							src={coverImage}
-							alt={listing.title}
-							fill
-							loading="lazy"
-							quality={90}
-							unoptimized
-							sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-							className="object-cover group-hover:scale-105 transition-transform duration-300"
-						/>
+					{mediaUrl ? (
+						mediaType === "video" ? (
+							<video
+								src={mediaUrl}
+								controls
+								preload="metadata"
+								className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+							/>
+						) : (
+							<Image
+								src={mediaUrl}
+								alt={listing.title}
+								fill
+								loading="lazy"
+								quality={90}
+								unoptimized
+								sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+								className="object-cover group-hover:scale-105 transition-transform duration-300"
+							/>
+						)
 					) : (
 						<div className="w-full h-full flex items-center justify-center text-gray-400">
 							<svg

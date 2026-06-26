@@ -1,11 +1,10 @@
-import { Effect } from "effect";
-import { Schema } from "effect";
-import { TokenStore } from "./ApiService";
+import { Effect, Schema } from "effect";
 import {
+	type HttpClient,
 	HttpClientRequest,
 	HttpClientResponse,
-	type HttpClient,
 } from "effect/unstable/http";
+import { TokenStore } from "./ApiService";
 
 const TokensSchema = Schema.Struct({
 	accessToken: Schema.String,

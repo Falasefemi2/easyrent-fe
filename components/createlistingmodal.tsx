@@ -1,22 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, MapPin, Upload, X } from "lucide-react";
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { runApi } from "@/lib/api/runtime";
-import { X, Upload, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
-import { toast } from "sonner";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
@@ -457,7 +457,7 @@ export default function CreateListingModal({
 								<input
 									type="file"
 									multiple
-									accept="image/*"
+									accept="image/*,video/*"
 									className="hidden"
 									onChange={handleFileChange}
 								/>
@@ -476,7 +476,7 @@ export default function CreateListingModal({
 											alt={`Preview ${index + 1}`}
 											className="w-full h-full object-cover"
 										/>
-										
+
 										{/* Badge for cover photo */}
 										{index === 0 && (
 											<div className="absolute top-2 left-2 bg-[#E8442A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
@@ -554,7 +554,9 @@ export default function CreateListingModal({
 							disabled={createListingMutation.isPending}
 							className="flex-1 bg-[#E8442A] hover:bg-[#d03d25] text-white"
 						>
-							{createListingMutation.isPending ? "Publishing..." : "Publish listing"}
+							{createListingMutation.isPending
+								? "Publishing..."
+								: "Publish listing"}
 						</Button>
 					)}
 				</div>

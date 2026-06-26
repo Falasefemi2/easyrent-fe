@@ -1,16 +1,16 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { runApi } from "@/lib/api/runtime";
-import { type Listing } from "@/lib/types";
+import { toast } from "sonner";
+import EmptyState from "@/components/emptystate";
+import ListingCard from "@/components/listingcard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import ListingCard from "@/components/listingcard";
-import { toast } from "sonner";
-import EmptyState from "@/components/emptystate";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { runApi } from "@/lib/api/runtime";
 import { queryKeys } from "@/lib/queryKeys";
+import type { Listing } from "@/lib/types";
 
 const FILTERS = [
 	"All",
@@ -89,7 +89,8 @@ export default function HomePage() {
 	const { data: favoritesData } = useQuery({
 		queryKey: queryKeys.favorites.list({ page: 1, limit: 100 }),
 		queryFn: () => runApi((api) => api.getMyFavorites({ page: 1, limit: 100 })),
-		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+		enabled:
+			typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
 	});
 
 	const favoritedIds = new Set(

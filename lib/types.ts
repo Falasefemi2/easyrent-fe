@@ -48,4 +48,3 @@ export interface FavoriteListing extends Listing {
 	media: readonly ListingMedia[];
 	favoritedAt: string;
 }
-

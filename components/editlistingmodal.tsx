@@ -1,23 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, MapPin, Upload, X } from "lucide-react";
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { runApi } from "@/lib/api/runtime";
-import { X, Upload, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
-import { toast } from "sonner";
-import type { ListingWithMedia } from "@/lib/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import type { ListingWithMedia } from "@/lib/types";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
@@ -72,7 +72,9 @@ export default function EditListingModal({
 	});
 
 	const [step3, setStep3] = useState<Step3Data>({ newFiles: [] });
-	const [previews, setPreviews] = useState<string[]>([]);
+	const [previews, setPreviews] = useState<
+		{ url: string; type: "image" | "video" }[]
+	>([]);
 
 	// Reset form when listing changes
 	useEffect(() => {
@@ -91,13 +93,13 @@ export default function EditListingModal({
 				longitude: listing.longitude ?? null,
 			});
 			setStep3({ newFiles: [] });
-			previews.forEach((url) => URL.revokeObjectURL(url));
+			previews.forEach((p) => URL.revokeObjectURL(p.url));
 			setPreviews([]);
 		}
 	}, [listing, open]);
 
 	const handleClose = () => {
-		previews.forEach((url) => URL.revokeObjectURL(url));
+		previews.forEach((p) => URL.revokeObjectURL(p.url));
 		setPreviews([]);
 		setStep3({ newFiles: [] });
 		setStep(1);
@@ -107,10 +109,14 @@ export default function EditListingModal({
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newFiles = Array.from(e.target.files ?? []);
 		setStep3((prev) => ({ newFiles: [...prev.newFiles, ...newFiles] }));
-		setPreviews((prev) => [
-			...prev,
-			...newFiles.map((f) => URL.createObjectURL(f)),
-		]);
+
+		const newPreviews: { url: string; type: "image" | "video" }[] =
+			newFiles.map((f) => ({
+				url: URL.createObjectURL(f),
+				type: f.type.startsWith("video/") ? "video" : ("image" as const),
+			}));
+
+		setPreviews((prev) => [...prev, ...newPreviews]);
 	};
 
 	const moveFile = (index: number, direction: "up" | "down") => {
@@ -131,7 +137,7 @@ export default function EditListingModal({
 	};
 
 	const handleRemoveFile = (index: number) => {
-		URL.revokeObjectURL(previews[index]);
+		URL.revokeObjectURL(previews[index].url);
 		const newFiles = step3.newFiles.filter((_, i) => i !== index);
 		const newPreviews = previews.filter((_, i) => i !== index);
 		setStep3({ newFiles });
@@ -170,7 +176,9 @@ export default function EditListingModal({
 		onSuccess: () => {
 			toast.success("Listing updated successfully!");
 			queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
-			queryClient.invalidateQueries({ queryKey: queryKeys.listings.detail(listing.id) });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.listings.detail(listing.id),
+			});
 			handleClose();
 			onSuccess();
 		},
@@ -492,7 +500,7 @@ export default function EditListingModal({
 								<input
 									type="file"
 									multiple
-									accept="image/*"
+									accept="image/*,video/*"
 									className="hidden"
 									onChange={handleFileChange}
 								/>
@@ -510,11 +518,20 @@ export default function EditListingModal({
 											key={index}
 											className="group relative aspect-video rounded-xl overflow-hidden border border-gray-100 bg-gray-50"
 										>
-											<img
-												src={preview}
-												alt={`Preview ${index + 1}`}
-												className="w-full h-full object-cover"
-											/>
+											{preview.type === "video" ? (
+												<video
+													src={preview.url}
+													className="w-full h-full object-cover"
+													controls
+													preload="metadata"
+												/>
+											) : (
+												<img
+													src={preview.url}
+													alt={`Preview ${index + 1}`}
+													className="w-full h-full object-cover"
+												/>
+											)}
 
 											{/* Controls overlay */}
 											<div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">

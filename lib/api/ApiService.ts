@@ -1,16 +1,16 @@
-import { Context, Effect, Layer, Ref, flow, Schedule, Schema } from "effect";
+import { Context, Effect, flow, Layer, Ref, Schedule, Schema } from "effect";
 import {
 	HttpClient,
 	HttpClientRequest,
 	HttpClientResponse,
 } from "effect/unstable/http";
 import {
+	ApiError,
+	AuthTokens,
 	Listing,
 	type ListingWithMedia,
-	type PaginatedListings,
-	AuthTokens,
 	type PaginatedFavorites,
-	ApiError,
+	type PaginatedListings,
 } from "./client";
 
 export class TokenStore extends Context.Service<

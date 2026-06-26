@@ -1,10 +1,10 @@
 "use client";
 
-import * as React from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Input } from "./input";
-import { Button } from "./button";
+import * as React from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "./button";
+import { Input } from "./input";
 
 const PasswordInput = React.forwardRef<
 	HTMLInputElement,

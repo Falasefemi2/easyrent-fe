@@ -1,6 +1,6 @@
-import { ManagedRuntime, Layer, Effect } from "effect";
-import { ApiService, TokenStore } from "./ApiService";
+import { Effect, Layer, ManagedRuntime } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
+import { ApiService, TokenStore } from "./ApiService";
 
 const AppLayer = ApiService.layer.pipe(
 	Layer.provide(TokenStore.layer),

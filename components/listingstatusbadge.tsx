@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { runApi } from "@/lib/api/runtime";
-import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { runApi } from "@/lib/api/runtime";
 import { queryKeys } from "@/lib/queryKeys";
 
 type Status = "avaiable" | "rented" | "inative";
@@ -51,9 +51,7 @@ export default function ListingStatusBadge({
 
 	const updateStatusMutation = useMutation({
 		mutationFn: () =>
-			runApi((api) =>
-				(api as any).updateListingStatus(listingId, config.next),
-			),
+			runApi((api) => (api as any).updateListingStatus(listingId, config.next)),
 		onSuccess: () => {
 			const nextStatus = config.next;
 			const successMessages: Record<Status, string> = {
@@ -66,7 +64,9 @@ export default function ListingStatusBadge({
 			toast.success(successMessages[nextStatus]);
 
 			queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
-			queryClient.invalidateQueries({ queryKey: queryKeys.listings.detail(listingId) });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.listings.detail(listingId),
+			});
 		},
 		onError: (err) => {
 			console.error(err);

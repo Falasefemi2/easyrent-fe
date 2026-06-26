@@ -1,29 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
-import dynamic from "next/dynamic";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+	ArrowLeft,
+	Bed,
 	Heart,
 	MapPin,
-	Bed,
-	Sofa,
-	ArrowLeft,
-	Share2,
 	Pencil,
+	Share2,
+	Sofa,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { runApi } from "@/lib/api/runtime";
-import type { ListingWithMedia } from "@/lib/types";
-import { formatPrice } from "@/lib/utils";
+import dynamic from "next/dynamic";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ContactLandlordModal from "@/components/contactlandlordmodal";
 import EditListingModal from "@/components/editlistingmodal";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { runApi } from "@/lib/api/runtime";
 import { queryKeys } from "@/lib/queryKeys";
+import type { ListingWithMedia } from "@/lib/types";
+import { formatPrice } from "@/lib/utils";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -50,17 +50,22 @@ export default function ListingDetailPage() {
 	const { data: user } = useQuery({
 		queryKey: queryKeys.user.me,
 		queryFn: () => runApi((api) => api.getMe()),
-		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+		enabled:
+			typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
 	});
 
 	const currentUserId = (user as unknown as { id: string })?.id ?? null;
-	const isLandlord = currentUserId && listing ? currentUserId === listing.landlordId : false;
+	const isLandlord =
+		currentUserId && listing ? currentUserId === listing.landlordId : false;
 
 	// Check favorite status
 	const { data: initialFavoritedData } = useQuery({
 		queryKey: queryKeys.favorites.check(id),
 		queryFn: () => runApi((api) => api.checkFavorite(id)),
-		enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken") && !!id,
+		enabled:
+			typeof window !== "undefined" &&
+			!!localStorage.getItem("accessToken") &&
+			!!id,
 	});
 
 	const favorited = !!initialFavoritedData;
@@ -75,10 +80,14 @@ export default function ListingDetailPage() {
 			}
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.favorites.check(id) });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.favorites.check(id),
+			});
 			queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
 			queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
-			toast.success(favorited ? "Removed from favorites" : "Added to favorites!");
+			toast.success(
+				favorited ? "Removed from favorites" : "Added to favorites!",
+			);
 		},
 		onError: (e) => {
 			toast.error("Failed to update favorites. Please try again.");

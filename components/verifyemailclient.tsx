@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { runApi } from "@/lib/api/runtime";
-import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { runApi } from "@/lib/api/runtime";
 
 export default function VerifyEmailPage() {
 	const searchParams = useSearchParams();

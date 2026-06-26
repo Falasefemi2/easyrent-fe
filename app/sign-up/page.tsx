@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Label } from "@/components/ui/label";
 import { runApi } from "@/lib/api/runtime";
-import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
 
 export default function SignUpPage() {
 	const router = useRouter();
@@ -100,113 +107,121 @@ export default function SignUpPage() {
 
 			{/* Form */}
 			<div className="flex-1 flex items-center justify-center px-4 py-8">
-				<div className="w-full max-w-sm">
-					<div className="mb-8">
-						<h1 className="text-2xl font-semibold text-gray-900">
-							Create account
-						</h1>
-						<p className="text-sm text-gray-500 mt-1">
+				<Card className="w-full max-w-sm">
+					<CardHeader>
+						<CardTitle className="text-2xl">Create account</CardTitle>
+						<CardDescription>
 							Join EasyRent and find your next home
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<form onSubmit={handleSubmit} className="space-y-4">
+							<Field>
+								<FieldLabel htmlFor="fullname">Full name</FieldLabel>
+								<Input
+									id="fullname"
+									placeholder="Femi Falase"
+									value={form.fullname}
+									onChange={(e) =>
+										setForm({
+											...form,
+											fullname: e.target.value,
+										})
+									}
+									required
+								/>
+							</Field>
+
+							<Field>
+								<FieldLabel htmlFor="email">Email</FieldLabel>
+								<Input
+									id="email"
+									type="email"
+									placeholder="you@example.com"
+									value={form.email}
+									onChange={(e) =>
+										setForm({
+											...form,
+											email: e.target.value,
+										})
+									}
+									required
+								/>
+							</Field>
+
+							<Field>
+								<FieldLabel htmlFor="phone">Phone number</FieldLabel>
+								<Input
+									id="phone"
+									type="tel"
+									placeholder="+2347013329953"
+									value={form.phone}
+									onChange={(e) =>
+										setForm({
+											...form,
+											phone: e.target.value,
+										})
+									}
+									required
+								/>
+							</Field>
+
+							<Field>
+								<FieldLabel htmlFor="password">Password</FieldLabel>
+								<PasswordInput
+									id="password"
+									placeholder="Min. 8 characters"
+									value={form.password}
+									onChange={(e) =>
+										setForm({
+											...form,
+											password: e.target.value,
+										})
+									}
+									required
+								/>
+							</Field>
+
+							<Field>
+								<FieldLabel htmlFor="confirmPassword">
+									Confirm password
+								</FieldLabel>
+								<PasswordInput
+									id="confirmPassword"
+									placeholder="••••••••"
+									value={form.confirmPassword}
+									onChange={(e) =>
+										setForm({
+											...form,
+											confirmPassword: e.target.value,
+										})
+									}
+									required
+								/>
+							</Field>
+
+							<Button
+								type="submit"
+								disabled={registerMutation.isPending}
+								className="w-full bg-[#E8442A] hover:bg-[#d03d25] text-white h-11"
+							>
+								{registerMutation.isPending
+									? "Creating account..."
+									: "Create account"}
+							</Button>
+						</form>
+
+						<p className="text-center text-sm text-gray-500 mt-6">
+							Already have an account?{" "}
+							<Link
+								href="/sign-in"
+								className="text-[#E8442A] font-medium hover:underline"
+							>
+								Sign in
+							</Link>
 						</p>
-					</div>
-
-					<form onSubmit={handleSubmit} className="space-y-4">
-						<div className="space-y-2">
-							<Label>Full name</Label>
-							<Input
-								placeholder="Femi Falase"
-								value={form.fullname}
-								onChange={(e) =>
-									setForm({
-										...form,
-										fullname: e.target.value,
-									})
-								}
-								required
-							/>
-						</div>
-
-						<div className="space-y-2">
-							<Label>Email</Label>
-							<Input
-								type="email"
-								placeholder="you@example.com"
-								value={form.email}
-								onChange={(e) =>
-									setForm({
-										...form,
-										email: e.target.value,
-									})
-								}
-								required
-							/>
-						</div>
-
-						<div className="space-y-2">
-							<Label>Phone number</Label>
-							<Input
-								type="tel"
-								placeholder="+2347013329953"
-								value={form.phone}
-								onChange={(e) =>
-									setForm({
-										...form,
-										phone: e.target.value,
-									})
-								}
-								required
-							/>
-						</div>
-
-						<div className="space-y-2">
-							<Label>Password</Label>
-							<PasswordInput
-								placeholder="Min. 8 characters"
-								value={form.password}
-								onChange={(e) =>
-									setForm({
-										...form,
-										password: e.target.value,
-									})
-								}
-								required
-							/>
-						</div>
-
-						<div className="space-y-2">
-							<Label>Confirm password</Label>
-							<PasswordInput
-								placeholder="••••••••"
-								value={form.confirmPassword}
-								onChange={(e) =>
-									setForm({
-										...form,
-										confirmPassword: e.target.value,
-									})
-								}
-								required
-							/>
-						</div>
-
-						<Button
-							type="submit"
-							disabled={registerMutation.isPending}
-							className="w-full bg-[#E8442A] hover:bg-[#d03d25] text-white h-11"
-						>
-							{registerMutation.isPending ? "Creating account..." : "Create account"}
-						</Button>
-					</form>
-
-					<p className="text-center text-sm text-gray-500 mt-6">
-						Already have an account?{" "}
-						<Link
-							href="/sign-in"
-							className="text-[#E8442A] font-medium hover:underline"
-						>
-							Sign in
-						</Link>
-					</p>
-				</div>
+					</CardContent>
+				</Card>
 			</div>
 		</div>
 	);

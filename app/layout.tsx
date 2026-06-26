@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
-import { Toaster } from "@/components/ui/sonner";
 import GlobalNav from "@/components/GlobalNav";
+import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
 import { Providers } from "./providers";
 
 const ibmPlexSans = IBM_Plex_Sans({
