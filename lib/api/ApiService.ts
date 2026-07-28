@@ -158,7 +158,11 @@ export class ApiService extends Context.Service<
     Effect.gen(function* () {
       const tokenStore = yield* TokenStore
 
-      const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
+      const BASE_URL =
+        (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ||
+        process.env.VITE_API_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "https://used-odilia-femmieorg-e85b92f9.koyeb.app"
 
       const baseClient = (yield* HttpClient.HttpClient).pipe(
         HttpClient.mapRequest(flow(HttpClientRequest.prependUrl(BASE_URL), HttpClientRequest.acceptJson)),

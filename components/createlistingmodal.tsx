@@ -1,9 +1,6 @@
-"use client"
-
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight, MapPin, Upload, X } from "lucide-react"
-import dynamic from "next/dynamic"
-import { useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -13,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { runApi } from "@/lib/api/runtime"
 import { queryKeys } from "@/lib/queryKeys"
 
-const MapView = dynamic(() => import("./MapView"), { ssr: false })
+const MapView = lazy(() => import("./MapView"))
 
 interface CreateListingModalProps {
   open: boolean
@@ -354,19 +351,21 @@ export default function CreateListingModal({ open, onClose, onSuccess }: CreateL
               <p className="text-xs text-gray-400">Type address then press Enter or click search to pin location</p>
             </div>
             <div className="rounded-xl overflow-hidden border border-gray-200 h-60">
-              <MapView
-                latitude={step2.latitude ?? DEFAULT_LAGOS.latitude}
-                longitude={step2.longitude ?? DEFAULT_LAGOS.longitude}
-                address={step2.address}
-                draggable
-                onPositionChange={(lat, lng) => {
-                  setStep2((prev) => ({
-                    ...prev,
-                    latitude: lat,
-                    longitude: lng,
-                  }))
-                }}
-              />
+              <Suspense fallback={<div className="w-full h-full bg-gray-100 animate-pulse" />}>
+                <MapView
+                  latitude={step2.latitude ?? DEFAULT_LAGOS.latitude}
+                  longitude={step2.longitude ?? DEFAULT_LAGOS.longitude}
+                  address={step2.address}
+                  draggable
+                  onPositionChange={(lat, lng) => {
+                    setStep2((prev) => ({
+                      ...prev,
+                      latitude: lat,
+                      longitude: lng,
+                    }))
+                  }}
+                />
+              </Suspense>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

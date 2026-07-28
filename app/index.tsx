@@ -1,8 +1,7 @@
-"use client"
-
+import { createFileRoute } from "@tanstack/react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
-import { toast } from "sonner"
+
 import EmptyState from "@/components/emptystate"
 import ListingCard from "@/components/listingcard"
 import { Button } from "@/components/ui/button"
@@ -10,59 +9,84 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { runApi } from "@/lib/api/runtime"
 import { queryKeys } from "@/lib/queryKeys"
-import type { Listing } from "@/lib/types"
+
+export const Route = createFileRoute("/")({
+  component: HomePage,
+})
 
 const FILTERS = ["All", "Furnished", "1 bed", "2 beds", "3+ beds", "Self contain"]
 
-export default function HomePage() {
+function HomePage() {
   const queryClient = useQueryClient()
+
   const [page, setPage] = useState(1)
   const [activeFilter, setActiveFilter] = useState("All")
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [hasToken, setHasToken] = useState(false)
+
+  useEffect(() => {
+    setHasToken(!!localStorage.getItem("accessToken"))
+  }, [])
 
   useEffect(() => {
     const handleListingCreated = () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.listings.all })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.listings.all,
+      })
       setPage(1)
     }
+
     window.addEventListener("listing-created", handleListingCreated)
+
     return () => {
       window.removeEventListener("listing-created", handleListingCreated)
     }
   }, [queryClient])
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
   const getFilterParams = (filter: string) => {
     switch (filter) {
       case "Furnished":
         return { furnished: true }
+
       case "1 bed":
         return { rooms: 1 }
+
       case "2 beds":
         return { rooms: 2 }
+
       case "3+ beds":
         return { minRooms: 3 }
+
       case "Self contain":
-        return { rooms: 1, furnished: false }
+        return {
+          rooms: 1,
+          furnished: false,
+        }
+
       default:
         return {}
     }
   }
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [searchQuery])
-
-  // Fetch listings
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.listings.list({
       page,
       limit: 12,
       ...getFilterParams(activeFilter),
-      ...(debouncedSearch ? { search: debouncedSearch } : {}),
+      ...(debouncedSearch
+        ? {
+            search: debouncedSearch,
+          }
+        : {}),
     }),
     queryFn: () =>
       runApi((api) =>
@@ -70,7 +94,11 @@ export default function HomePage() {
           page,
           limit: 12,
           ...getFilterParams(activeFilter),
-          ...(debouncedSearch ? { search: debouncedSearch } : {}),
+          ...(debouncedSearch
+            ? {
+                search: debouncedSearch,
+              }
+            : {}),
         }),
       ),
   })
@@ -78,32 +106,41 @@ export default function HomePage() {
   const listings = data?.data ?? []
   const totalPages = data?.totalPages ?? 1
 
-  // Fetch favorites
   const { data: favoritesData } = useQuery({
-    queryKey: queryKeys.favorites.list({ page: 1, limit: 100 }),
-    queryFn: () => runApi((api) => api.getMyFavorites({ page: 1, limit: 100 })),
-    enabled: typeof window !== "undefined" && !!localStorage.getItem("accessToken"),
+    queryKey: queryKeys.favorites.list({
+      page: 1,
+      limit: 100,
+    }),
+    queryFn: () =>
+      runApi((api) =>
+        api.getMyFavorites({
+          page: 1,
+          limit: 100,
+        }),
+      ),
+    enabled: hasToken,
   })
 
-  const favoritedIds = new Set((favoritesData?.data as any[] | undefined)?.map((f: any) => f.id) ?? [])
+  const favoritedIds = new Set((favoritesData?.data as any[] | undefined)?.map((favorite: any) => favorite.id) ?? [])
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Search bar */}
+      {/* Search */}
       <div className="border-b border-gray-100 py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 border border-gray-200 rounded-full px-4 py-2 max-w-2xl shadow-sm hover:shadow-md transition-shadow">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex max-w-2xl items-center gap-2 rounded-full border border-gray-200 px-4 py-2 shadow-sm transition-shadow hover:shadow-md">
             <Input
               placeholder="Search by location..."
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
+              onChange={(event) => {
+                setSearchQuery(event.target.value)
                 setPage(1)
               }}
-              className="border-none shadow-none focus-visible:ring-0 text-sm flex-1 p-0"
+              className="flex-1 border-none p-0 text-sm shadow-none focus-visible:ring-0"
             />
-            <button className="bg-[#E8442A] text-white rounded-full p-2 hover:bg-[#d03d25] transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+            <button className="rounded-full bg-[#E8442A] p-2 text-white transition-colors hover:bg-[#d03d25]">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -116,10 +153,10 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Filter chips */}
+      {/* Filters */}
       <div className="border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-2 py-3 overflow-x-auto scrollbar-hide">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="scrollbar-hide flex gap-2 overflow-x-auto py-3">
             {FILTERS.map((filter) => (
               <button
                 key={filter}
@@ -127,9 +164,9 @@ export default function HomePage() {
                   setActiveFilter(filter)
                   setPage(1)
                 }}
-                className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap border transition-colors ${
+                className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm transition-colors ${
                   activeFilter === filter
-                    ? "bg-[#E8442A] text-white border-[#E8442A]"
+                    ? "border-[#E8442A] bg-[#E8442A] text-white"
                     : "border-gray-200 text-gray-600 hover:border-gray-400"
                 }`}
               >
@@ -140,12 +177,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Listings grid */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 sm:pb-8">
+      {/* Listings */}
+      <main className="mx-auto max-w-7xl px-4 py-8 pb-24 sm:px-6 sm:pb-8 lg:px-8">
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="space-y-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="space-y-3">
                 <Skeleton className="aspect-4/3 rounded-xl" />
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
@@ -153,35 +190,40 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        ) : listings?.length === 0 ? (
+        ) : listings.length === 0 ? (
           <EmptyState type="search" />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {listings?.map((listing) => (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {listings.map((listing) => (
               <ListingCard key={listing.id} listing={listing} initialFavorited={favoritedIds.has(listing.id)} />
             ))}
           </div>
         )}
 
-        {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-10">
+          <div className="mt-10 flex items-center justify-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
+              onClick={() => {
+                setPage((previous) => Math.max(1, previous - 1))
+              }}
             >
               Previous
             </Button>
+
             <span className="text-sm text-gray-500">
               Page {page} of {totalPages}
             </span>
+
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
+              onClick={() => {
+                setPage((previous) => Math.min(totalPages, previous + 1))
+              }}
             >
               Next
             </Button>

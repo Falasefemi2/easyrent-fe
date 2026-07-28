@@ -1,16 +1,13 @@
-"use client"
-
 import { useQuery } from "@tanstack/react-query"
-import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { useEffect } from "react"
 import { toast } from "sonner"
 import { runApi } from "@/lib/api/runtime"
 
 export default function VerifyEmailPage() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const token = searchParams.get("token")
+  const search = useSearch({ strict: false })
+  const navigate = useNavigate()
+  const token = (search as { token?: string })?.token
 
   const { error, isLoading, isSuccess, isError } = useQuery({
     queryKey: ["verify-email", token],
@@ -22,10 +19,10 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     if (isSuccess) {
       toast.success("Email verified successfully")
-      const timer = setTimeout(() => router.push("/sign-in"), 3000)
+      const timer = setTimeout(() => navigate({ to: "/sign-in" }), 3000)
       return () => clearTimeout(timer)
     }
-  }, [isSuccess, router])
+  }, [isSuccess, navigate])
 
   useEffect(() => {
     if (isError) {
@@ -65,7 +62,7 @@ export default function VerifyEmailPage() {
             </div>
             <h1 className="text-xl font-semibold text-gray-900">Verification failed</h1>
             <p className="text-sm text-gray-500">{errorMessage}</p>
-            <Link href="/sign-in" className="text-sm text-[#E8442A] hover:underline">
+            <Link to="/sign-in" className="text-sm text-[#E8442A] hover:underline">
               Back to sign in
             </Link>
           </>

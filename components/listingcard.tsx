@@ -1,8 +1,6 @@
-"use client"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { Heart } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
@@ -81,7 +79,7 @@ export default function ListingCard({
   const priceFormatted = formatPrice(listing.price) // Safe call
 
   return (
-    <Link href={`/listings/${listing.id}`}>
+    <Link to="/listings/$id" params={{ id: listing.id }}>
       <div className="group cursor-pointer">
         <div className="relative aspect-4/3 rounded-xl overflow-hidden bg-gray-100 mb-3">
           {mediaUrl ? (
@@ -93,15 +91,11 @@ export default function ListingCard({
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             ) : (
-              <Image
+              <img
                 src={mediaUrl}
                 alt={listing.title}
-                fill
                 loading="lazy"
-                quality={90}
-                unoptimized
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             )
           ) : (
