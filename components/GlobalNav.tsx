@@ -1,13 +1,10 @@
-"use client"
-
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { Link, useLocation } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import CreateListingModal from "./createlistingmodal"
 import Navbar from "./navbar"
 
 export default function GlobalNav() {
-  const pathname = usePathname()
+  const pathname = useLocation({ select: (location) => location.pathname })
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
@@ -64,7 +61,7 @@ export default function GlobalNav() {
 
           {/* Mobile bottom tab bar */}
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 flex sm:hidden">
-            <Link href="/" className="flex-1 flex flex-col items-center py-2 gap-1">
+            <Link to="/" className="flex-1 flex flex-col items-center py-2 gap-1">
               <svg
                 className={`w-5 h-5 ${pathname === "/" ? "text-[#E8442A]" : "text-gray-400"}`}
                 fill="none"
@@ -80,7 +77,7 @@ export default function GlobalNav() {
               </svg>
               <span className={`text-xs ${pathname === "/" ? "text-[#E8442A]" : "text-gray-400"}`}>Explore</span>
             </Link>
-            <Link href="/profile" className="flex-1 flex flex-col items-center py-2 gap-1">
+            <Link to="/profile" className="flex-1 flex flex-col items-center py-2 gap-1">
               <svg
                 className={`w-5 h-5 ${pathname === "/saved" ? "text-[#E8442A]" : "text-gray-400"}`}
                 fill="none"
@@ -96,7 +93,7 @@ export default function GlobalNav() {
               </svg>
               <span className={`text-xs ${pathname === "/saved" ? "text-[#E8442A]" : "text-gray-400"}`}>Saved</span>
             </Link>
-            <Link href="/profile" className="flex-1 flex flex-col items-center py-2 gap-1">
+            <Link to="/profile" className="flex-1 flex flex-col items-center py-2 gap-1">
               <svg
                 className={`w-5 h-5 ${pathname === "/profile" ? "text-[#E8442A]" : "text-gray-400"}`}
                 fill="none"
