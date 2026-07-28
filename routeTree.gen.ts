@@ -8,10 +8,10 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./app/routes/__root"
+import { Route as rootRouteImport } from './app/routes/__root'
 
-export type FileRoutesByFullPath = {}
-export type FileRoutesByTo = {}
+export interface FileRoutesByFullPath {}
+export interface FileRoutesByTo {}
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
 }
@@ -20,21 +20,23 @@ export interface FileRouteTypes {
   fullPaths: never
   fileRoutesByTo: FileRoutesByTo
   to: never
-  id: "__root__"
+  id: '__root__'
   fileRoutesById: FileRoutesById
 }
-export type RootRouteChildren = {}
+export interface RootRouteChildren {}
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {}
 }
 
 const rootRouteChildren: RootRouteChildren = {}
-export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
+export const routeTree = rootRouteImport
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./app/router.tsx"
-import type { createStart } from "@tanstack/react-start"
-declare module "@tanstack/react-start" {
+import type { getRouter } from './app/router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
