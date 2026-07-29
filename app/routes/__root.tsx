@@ -37,14 +37,7 @@ export const Route = createRootRoute({
 
 function RootLayout() {
   return (
-    <html
-      lang="en"
-      className={cn(
-        "h-full",
-        "antialiased",
-        "font-sans",
-      )}
-    >
+    <html lang="en" className={cn("h-full", "antialiased", "font-sans")}>
       <head>
         <HeadContent />
       </head>
