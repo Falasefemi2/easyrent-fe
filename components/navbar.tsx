@@ -33,9 +33,9 @@ export default function Navbar({ onCreateListing }: { onCreateListing?: () => vo
       localStorage.removeItem("userFullname")
       localStorage.removeItem("userEmail")
       queryClient.clear()
+      window.dispatchEvent(new CustomEvent("auth-change"))
       toast.success("Successfully signed out")
       navigate({ to: "/" })
-      window.location.href = "/"
     },
     onError: () => {
       toast.error("Failed to sign out")

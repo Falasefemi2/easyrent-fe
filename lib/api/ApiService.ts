@@ -160,8 +160,8 @@ export class ApiService extends Context.Service<
 
       const BASE_URL =
         (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ||
-        process.env.VITE_API_URL ||
-        process.env.NEXT_PUBLIC_API_URL ||
+        (typeof process !== "undefined" && process.env?.VITE_API_URL) ||
+        (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
         "https://used-odilia-femmieorg-e85b92f9.koyeb.app"
 
       const baseClient = (yield* HttpClient.HttpClient).pipe(
