@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { ArrowLeft, Bed, Heart, MapPin, Pencil, Share2, Sofa } from "lucide-react"
-import { lazy, Suspense, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import { toast } from "sonner"
 import ContactLandlordModal from "@/components/contactlandlordmodal"
 import EditListingModal from "@/components/editlistingmodal"
@@ -27,6 +27,11 @@ function ListingDetailPage() {
   const [showContact, setShowContact] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({})
+
+  useEffect(() => {
+    setActiveImage(0)
+    setImagesLoaded({})
+  }, [id])
 
   // Fetch listing detail
   const { data: listing, isLoading: loadingListing } = useQuery({

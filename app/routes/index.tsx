@@ -77,7 +77,7 @@ function HomePage() {
     }
   }
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.listings.list({
       page,
       limit: 12,
@@ -189,6 +189,13 @@ function HomePage() {
                 <Skeleton className="h-4 w-1/3" />
               </div>
             ))}
+          </div>
+        ) : isError ? (
+          <div className="py-16 text-center">
+            <p className="text-gray-600 mb-4">Failed to load listings. Please try again.</p>
+            <Button onClick={() => refetch()} variant="outline" size="sm">
+              Retry
+            </Button>
           </div>
         ) : listings.length === 0 ? (
           <EmptyState type="search" />

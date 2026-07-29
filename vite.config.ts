@@ -17,7 +17,8 @@ export default defineConfig({
     tanstackStart({
       srcDirectory: ".",
       router: {
-        routesDirectory: "app/routes", // note: routes usually live one level deeper
+        routesDirectory: "app/routes",
+        generatedRouteTree: "app/routeTree.gen.ts",
         entry: "./app/router.tsx",
       },
     }),

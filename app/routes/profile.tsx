@@ -58,7 +58,12 @@ function ProfilePage() {
   }, [user])
 
   // Fetch user's listings
-  const { data: listingsData, isLoading: loadingListings } = useQuery({
+  const {
+    data: listingsData,
+    isLoading: loadingListings,
+    isError: isListingsError,
+    refetch: refetchListings,
+  } = useQuery({
     queryKey: queryKeys.listings.mine({ page: listingsPage, limit: 8 }),
     queryFn: () =>
       runApi((api) =>
@@ -85,7 +90,12 @@ function ProfilePage() {
   }, [queryClient])
 
   // Fetch user's favorites
-  const { data: favoritesData, isLoading: loadingFavorites } = useQuery({
+  const {
+    data: favoritesData,
+    isLoading: loadingFavorites,
+    isError: isFavoritesError,
+    refetch: refetchFavorites,
+  } = useQuery({
     queryKey: queryKeys.favorites.list({ page: favoritesPage, limit: 8 }),
     queryFn: () =>
       runApi((api) =>
@@ -180,14 +190,18 @@ function ProfilePage() {
               <Home className="w-4 h-4" />
               <span className="text-xs">My listings</span>
             </div>
-            <p className="text-2xl font-semibold text-gray-900">{loadingListings ? "—" : (listings?.length ?? 0)}</p>
+            <p className="text-2xl font-semibold text-gray-900">
+              {loadingListings ? "—" : (listingsData?.total ?? listings?.length ?? 0)}
+            </p>
           </div>
           <div className="bg-gray-50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-gray-500 mb-1">
               <Heart className="w-4 h-4" />
               <span className="text-xs">Saved</span>
             </div>
-            <p className="text-2xl font-semibold text-gray-900">{loadingFavorites ? "—" : favorites?.length}</p>
+            <p className="text-2xl font-semibold text-gray-900">
+              {loadingFavorites ? "—" : (favoritesData?.total ?? favorites?.length ?? 0)}
+            </p>
           </div>
         </div>
 
@@ -229,6 +243,13 @@ function ProfilePage() {
                     <Skeleton className="h-3 w-1/2" />
                   </div>
                 ))}
+              </div>
+            ) : isListingsError ? (
+              <div className="py-12 text-center">
+                <p className="text-gray-600 mb-4">Failed to load your listings.</p>
+                <Button onClick={() => refetchListings()} variant="outline" size="sm">
+                  Retry
+                </Button>
               </div>
             ) : listings?.length === 0 ? (
               <EmptyState
@@ -296,6 +317,13 @@ function ProfilePage() {
                     <Skeleton className="h-3 w-1/2" />
                   </div>
                 ))}
+              </div>
+            ) : isFavoritesError ? (
+              <div className="py-12 text-center">
+                <p className="text-gray-600 mb-4">Failed to load saved properties.</p>
+                <Button onClick={() => refetchFavorites()} variant="outline" size="sm">
+                  Retry
+                </Button>
               </div>
             ) : favorites?.length === 0 ? (
               <EmptyState type="favorites" onAction={() => navigate({ to: "/" })} actionLabel="Browse listings" />

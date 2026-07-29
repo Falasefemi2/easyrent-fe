@@ -79,7 +79,7 @@ export default function GlobalNav() {
             </Link>
             <Link to="/profile" className="flex-1 flex flex-col items-center py-2 gap-1">
               <svg
-                className={`w-5 h-5 ${pathname === "/saved" ? "text-[#E8442A]" : "text-gray-400"}`}
+                className={`w-5 h-5 ${pathname === "/profile" ? "text-[#E8442A]" : "text-gray-400"}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -91,7 +91,7 @@ export default function GlobalNav() {
                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                 />
               </svg>
-              <span className={`text-xs ${pathname === "/saved" ? "text-[#E8442A]" : "text-gray-400"}`}>Saved</span>
+              <span className={`text-xs ${pathname === "/profile" ? "text-[#E8442A]" : "text-gray-400"}`}>Saved</span>
             </Link>
             <Link to="/profile" className="flex-1 flex flex-col items-center py-2 gap-1">
               <svg
