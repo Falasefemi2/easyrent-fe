@@ -8,95 +8,76 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as SignInRouteImport } from './routes/sign-in'
-import { Route as SignUpRouteImport } from './routes/sign-up'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as ListingsIdRouteImport } from './routes/listings/$id'
+import { Route as rootRouteImport } from "./routes/__root"
+import { Route as IndexRouteImport } from "./routes/index"
+import { Route as ListingsIdRouteImport } from "./routes/listings/$id"
+import { Route as ProfileRouteImport } from "./routes/profile"
+import { Route as SignInRouteImport } from "./routes/sign-in"
+import { Route as SignUpRouteImport } from "./routes/sign-up"
+import { Route as VerifyEmailRouteImport } from "./routes/verify-email"
 
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
+  id: "/profile",
+  path: "/profile",
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInRoute = SignInRouteImport.update({
-  id: '/sign-in',
-  path: '/sign-in',
+  id: "/sign-in",
+  path: "/sign-in",
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignUpRoute = SignUpRouteImport.update({
-  id: '/sign-up',
-  path: '/sign-up',
+  id: "/sign-up",
+  path: "/sign-up",
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
+  id: "/verify-email",
+  path: "/verify-email",
   getParentRoute: () => rootRouteImport,
 } as any)
 const ListingsIdRoute = ListingsIdRouteImport.update({
-  id: '/listings/$id',
-  path: '/listings/$id',
+  id: "/listings/$id",
+  path: "/listings/$id",
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/profile': typeof ProfileRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/listings/$id': typeof ListingsIdRoute
+  "/": typeof IndexRoute
+  "/profile": typeof ProfileRoute
+  "/sign-in": typeof SignInRoute
+  "/sign-up": typeof SignUpRoute
+  "/verify-email": typeof VerifyEmailRoute
+  "/listings/$id": typeof ListingsIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/profile': typeof ProfileRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/listings/$id': typeof ListingsIdRoute
+  "/": typeof IndexRoute
+  "/profile": typeof ProfileRoute
+  "/sign-in": typeof SignInRoute
+  "/sign-up": typeof SignUpRoute
+  "/verify-email": typeof VerifyEmailRoute
+  "/listings/$id": typeof ListingsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/profile': typeof ProfileRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/listings/$id': typeof ListingsIdRoute
+  "/": typeof IndexRoute
+  "/profile": typeof ProfileRoute
+  "/sign-in": typeof SignInRoute
+  "/sign-up": typeof SignUpRoute
+  "/verify-email": typeof VerifyEmailRoute
+  "/listings/$id": typeof ListingsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/profile'
-    | '/sign-in'
-    | '/sign-up'
-    | '/verify-email'
-    | '/listings/$id'
+  fullPaths: "/" | "/profile" | "/sign-in" | "/sign-up" | "/verify-email" | "/listings/$id"
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/profile'
-    | '/sign-in'
-    | '/sign-up'
-    | '/verify-email'
-    | '/listings/$id'
-  id:
-    | '__root__'
-    | '/'
-    | '/profile'
-    | '/sign-in'
-    | '/sign-up'
-    | '/verify-email'
-    | '/listings/$id'
+  to: "/" | "/profile" | "/sign-in" | "/sign-up" | "/verify-email" | "/listings/$id"
+  id: "__root__" | "/" | "/profile" | "/sign-in" | "/sign-up" | "/verify-email" | "/listings/$id"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -108,47 +89,47 @@ export interface RootRouteChildren {
   ListingsIdRoute: typeof ListingsIdRoute
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
+    "/profile": {
+      id: "/profile"
+      path: "/profile"
+      fullPath: "/profile"
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sign-in': {
-      id: '/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
+    "/sign-in": {
+      id: "/sign-in"
+      path: "/sign-in"
+      fullPath: "/sign-in"
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sign-up': {
-      id: '/sign-up'
-      path: '/sign-up'
-      fullPath: '/sign-up'
+    "/sign-up": {
+      id: "/sign-up"
+      path: "/sign-up"
+      fullPath: "/sign-up"
       preLoaderRoute: typeof SignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
+    "/verify-email": {
+      id: "/verify-email"
+      path: "/verify-email"
+      fullPath: "/verify-email"
       preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/listings/$id': {
-      id: '/listings/$id'
-      path: '/listings/$id'
-      fullPath: '/listings/$id'
+    "/listings/$id": {
+      id: "/listings/$id"
+      path: "/listings/$id"
+      fullPath: "/listings/$id"
       preLoaderRoute: typeof ListingsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -163,13 +144,12 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   ListingsIdRoute: ListingsIdRoute,
 }
-export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
+import type { createStart } from "@tanstack/react-start"
+import type { getRouter } from "./router.tsx"
+
+declare module "@tanstack/react-start" {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>

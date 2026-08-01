@@ -1,11 +1,9 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
-
-import appCss from "../globals.css?url"
-
 import GlobalNav from "@/components/GlobalNav"
-import { Providers } from "../providers"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
+import appCss from "../globals.css?url"
+import { Providers } from "../providers"
 
 export const Route = createRootRoute({
   head: () => ({
@@ -37,14 +35,7 @@ export const Route = createRootRoute({
 
 function RootLayout() {
   return (
-    <html
-      lang="en"
-      className={cn(
-        "h-full",
-        "antialiased",
-        "font-sans",
-      )}
-    >
+    <html lang="en" className={cn("h-full", "antialiased", "font-sans")}>
       <head>
         <HeadContent />
       </head>
