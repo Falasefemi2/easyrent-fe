@@ -14,7 +14,7 @@ EasyRent is a modern rental property listing platform designed for seamless prop
 
 ## Tech Stack
 
-- Framework: Next.js (App Router)
+- Framework: Next.js (App Router) rewrote to tanstack start
 - Language: TypeScript
 - Functional Programming: Effect-TS
 - Styling: Tailwind CSS 4
